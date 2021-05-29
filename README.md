@@ -1,7 +1,8 @@
 # Médias Móveis Simples
 
 Main dependencies:
-- Django (framework)
+- Django
+- Django Ninja
 
 Compatibility:
 - Python 3.9.5
@@ -54,9 +55,10 @@ Now just run the command below to run the application:
 make run
 ```
 
-After running the command above, you can access the administrative panel:
+After running the command above, you can access the documentation and the administrative panel:
 ```
 http://localhost:8000/admin
+http://localhost:8000/v1/docs
 ```
 
 <a id="deploying_prod"></a>

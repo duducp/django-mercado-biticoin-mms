@@ -1,3 +1,3 @@
 from .base import *  # noqa
 
-DEBUG = True
+DEBUG = bool(strtobool(os.getenv('DEBUG', 'True')))

@@ -30,7 +30,7 @@ collectstatic: ## Creates static files for admin
 	python src/manage.py collectstatic --noinput #--clear
 
 app:  ## Creates a new django application Ex.: make app name=products
-	cd $(PROJECT_PATH) && python ../../manage.py startapp $(name)
+	cd $(PROJECT_PATH) && python ../manage.py startapp $(name)
 	@echo 'Application created in "$(PROJECT_PATH)/$(name)"'
 
 run: collectstatic  ## Run the django project

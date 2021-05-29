@@ -7,6 +7,8 @@ from django.utils.translation import gettext_lazy as _
 
 import structlog
 
+from core import __version__
+
 CORE_DIR = os.path.dirname(os.path.dirname(__file__))
 SRC_DIR = os.path.dirname(CORE_DIR)
 BASE_DIR = os.path.dirname(SRC_DIR)
@@ -20,6 +22,9 @@ DEBUG = bool(strtobool(os.getenv('DEBUG', 'False')))
 WSGI_APPLICATION = 'core.wsgi.application'
 ROOT_URLCONF = 'urls'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(';')
+
+VERSION = __version__
+APP_NAME = 'mb-mms-api'
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 LOCALE_PATHS = [os.path.join(CORE_DIR, 'locales')]
@@ -82,7 +87,9 @@ THIRD_PARTY_APPS = [
     'django_extensions',
 ]
 
-LOCAL_APPS = []
+LOCAL_APPS = [
+    'apps.ping.apps.PingConfig',
+]
 
 INSTALLED_APPS = DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -102,7 +109,9 @@ THIRD_PARTY_MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
-LOCAL_MIDDLEWARE = []
+LOCAL_MIDDLEWARE = [
+    'core.middlewares.access_logging.AccessLoggingMiddleware',
+]
 
 MIDDLEWARE = DEFAULT_MIDDLEWARE + THIRD_PARTY_MIDDLEWARE + LOCAL_MIDDLEWARE
 
@@ -166,7 +175,7 @@ LOGGING = {
 structlog.configure(
     processors=[
         structlog.stdlib.filter_by_level,
-        structlog.processors.TimeStamper(fmt='iso'),
+        structlog.processors.TimeStamper(fmt='iso', key='datetime', utc=True),
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
         structlog.stdlib.PositionalArgumentsFormatter(),
