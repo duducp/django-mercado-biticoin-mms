@@ -59,4 +59,20 @@ urls:  ## View available routes in the app
 shell:  ## Opens the project shell
 	python src/manage.py shell_plus --ipython  # shell -i ipython
 
+lint: ## Performs the project lint to detect possible errors
+	isort .
+	sort-requirements requirements/base.txt
+	sort-requirements requirements/prod.txt
+	sort-requirements requirements/dev.txt
+	sort-requirements requirements/test.txt
+	flake8 --show-source .
+	pycodestyle --show-source .
+	mypy src/
+
+safety-check: ## Checks libraries safety
+	safety check -r requirements/base.txt
+	safety check -r requirements/prod.txt
+	safety check -r requirements/dev.txt
+	safety check -r requirements/test.txt
+
 .PHONY: run shell urls info app
