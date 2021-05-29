@@ -21,6 +21,10 @@ help:  ## This help
 
 dependencies: ## Install development dependencies
 	pip install -U -r requirements/dev.txt
+	pre-commit install
+
+pre-commit: ## Configure pre-commit to keep the code organized when committing and pushing
+	pre-commit install
 
 collectstatic: ## Creates static files for admin
 	python src/manage.py collectstatic --noinput #--clear

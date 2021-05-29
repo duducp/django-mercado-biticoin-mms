@@ -1,0 +1,21 @@
+default_language_version:
+  python: python3.9
+repos:
+  - repo: local
+    hooks:
+      - id: lint
+        name: run lint
+        entry: make lint
+        language: python
+        stages: [commit, push]
+      - id: migration
+        name: run detect migration
+        entry: make migration-detect
+        language: python
+        types: [python]
+        stages: [push]
+      - id: safetycheck
+        name: run safety check
+        entry: make safety-check
+        language: python
+        stages: [push]
