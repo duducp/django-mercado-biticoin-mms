@@ -53,6 +53,12 @@ LANGUAGES = [
     ('en', _('LANGUAGE_ENGLISH')),
 ]
 
+# Configurations of the django-cid module responsible for generating correlation_id of logs and requests (https://github.com/Polyconseil/django-cid) # noqa
+CID_GENERATE = True
+CID_CONCATENATE_IDS = True
+CID_HEADER = 'X-Correlation-ID'
+CID_RESPONSE_HEADER = 'X-Correlation-ID'
+
 # Django templates settings (https://docs.djangoproject.com/en/3.2/topics/templates) # noqa
 TEMPLATES = [
     {
@@ -85,6 +91,7 @@ if ADMIN_ENABLED:
 
 THIRD_PARTY_APPS = [
     'django_extensions',
+    'cid.apps.CidAppConfig',
 ]
 
 LOCAL_APPS = [
@@ -107,9 +114,11 @@ DEFAULT_MIDDLEWARE = [
 
 THIRD_PARTY_MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'cid.middleware.CidMiddleware',
 ]
 
 LOCAL_MIDDLEWARE = [
+    'core.middlewares.version_header.VersionHeaderMiddleware',
     'core.middlewares.access_logging.AccessLoggingMiddleware',
 ]
 
