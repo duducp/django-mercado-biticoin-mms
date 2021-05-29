@@ -8,6 +8,7 @@ from django.utils.translation import gettext_lazy as _
 import structlog
 
 from core import __version__
+from core.logging import processors
 
 CORE_DIR = os.path.dirname(os.path.dirname(__file__))
 SRC_DIR = os.path.dirname(CORE_DIR)
@@ -152,6 +153,10 @@ LOGGING = {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse',
         },
+        'ignore_if_contains': {
+            '()': 'core.logging.filters.IgnoreIfContains',
+            'substrings': ['/ping'],
+        },
     },
     'formatters': {
         'json': {
@@ -163,7 +168,7 @@ LOGGING = {
         'stdout': {
             'class': 'logging.StreamHandler',
             'formatter': 'json',
-            'filters': [],
+            'filters': ['ignore_if_contains'],
             'stream': sys.stdout,
         },
     },
@@ -183,6 +188,9 @@ LOGGING = {
 # Configuration of the Structlog module that structures the logs in Json (https://www.structlog.org/en/stable) # noqa
 structlog.configure(
     processors=[
+        processors.hostname,
+        processors.version,
+        processors.correlation,
         structlog.stdlib.filter_by_level,
         structlog.processors.TimeStamper(fmt='iso', key='datetime', utc=True),
         structlog.stdlib.add_logger_name,
