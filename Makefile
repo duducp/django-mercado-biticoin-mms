@@ -36,8 +36,9 @@ collectstatic: ## Creates static files for admin
 	python src/manage.py collectstatic --noinput #--clear
 
 app:  ## Creates a new django application Ex.: make app name=products
-	cd $(PROJECT_PATH) && python ../manage.py startapp $(name)
+	cd $(PROJECT_PATH) && python ../manage.py startapp --template=../../.template/app_name.zip -e py -e md $(name)
 	@echo 'Application created in "$(PROJECT_PATH)/$(name)"'
+	@echo 'Read the README for more details: $(PROJECT_PATH)/$(name)/Readme.md'
 
 run: collectstatic  ## Run the django project
 	-$(MAKE) docker-dependencies-up
@@ -79,7 +80,6 @@ lint: ## Performs the project lint to detect possible errors
 	sort-requirements requirements/test.txt
 	flake8 --show-source .
 	pycodestyle --show-source .
-	mypy src/
 
 safety-check: ## Checks libraries safety
 	safety check -r requirements/base.txt
