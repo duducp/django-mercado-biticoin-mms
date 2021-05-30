@@ -5,6 +5,7 @@ from distutils.util import strtobool
 from django.urls import reverse_lazy
 from django.utils.translation import gettext_lazy as _
 
+import dj_database_url
 import structlog
 
 from core import __version__
@@ -92,6 +93,7 @@ if ADMIN_ENABLED:
 
 THIRD_PARTY_APPS = [
     'django_extensions',
+    'django_dbconn_retry',
     'cid.apps.CidAppConfig',
 ]
 
@@ -127,11 +129,39 @@ MIDDLEWARE = DEFAULT_MIDDLEWARE + THIRD_PARTY_MIDDLEWARE + LOCAL_MIDDLEWARE
 
 # Database django connection settings (https://docs.djangoproject.com/en/3.2/ref/databases) # noqa
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'db.sqlite3',
-    }
+    'default': dj_database_url.parse(
+        url=os.getenv(
+            'DATABASE_URL',
+            'postgres://postgres:postgres@127.0.0.1:5432/postgres'
+        ),
+        engine='django.db.backends.postgresql_psycopg2',
+        conn_max_age=int(os.getenv(
+            'DATABASE_DEFAULT_CONN_MAX_AGE',
+            '600'
+        )),
+        ssl_require=bool(strtobool(os.getenv(
+            'DATABASE_DEFAULT_SSL_REQUIRE',
+            'False'
+        )))
+    ),
+    'default_read': dj_database_url.parse(
+        url=os.getenv(
+            'DATABASE_READ_URL',
+            'postgres://postgres:postgres@127.0.0.1:5432/postgres'
+        ),
+        engine='django.db.backends.postgresql_psycopg2',
+        conn_max_age=int(os.getenv(
+            'DATABASE_DEFAULT_CONN_MAX_AGE',
+            '600'
+        )),
+        ssl_require=bool(strtobool(os.getenv(
+            'DATABASE_DEFAULT_SSL_REQUIRE',
+            'False'
+        )))
+    )
 }
+
+DATABASE_ROUTERS = ['core.databases.DatabaseRouter']
 
 # Type default for primary key fields (https://docs.djangoproject.com/en/3.2/topics/db/models/#automatic-primary-key-fields) # noqa
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

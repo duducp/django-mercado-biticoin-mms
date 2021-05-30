@@ -9,6 +9,7 @@ Compatibility:
 - Django 3.2.3
 
 ## Navigation
+- [First steps](#first_steps)
 - [Development mode](#development_mode)
 - [Deploying in production](#deploying_prod)
 - [Create new app](#create_app)
@@ -16,11 +17,8 @@ Compatibility:
 - [Logs](#logs)
 - [Correlation ID](#correlation_id)
 
-<a id="development_mode"></a>
-### Development mode
-
-The development mode by default uses Sqlite as a database.
-
+<a id="first_steps"></a>
+### First steps
 First, you must configure the virtual environment:
 ```shell script
 python -m venv venv
@@ -31,14 +29,19 @@ After that activate virtualenv:
 source venv/bin/activate
 ```
 
-Set the environment variables by cloning the **.env-sample** file to **.env-development**
-
 Run the command to install the development dependencies:
 ```shell script
 make dependencies
 ```
 
-Now, run the command to create the tables in the database:
+Last and most important set the environment variables by cloning the
+**.env-sample** file to **.env-development**
+
+<a id="development_mode"></a>
+### Development mode
+The development mode by default uses Postgres as a database.
+
+Run the command to create the tables in the database:
 ```shell script
 make migrate
 ```
@@ -62,17 +65,19 @@ make run
 After running the command above, you can access the documentation and the administrative panel:
 ```
 http://localhost:8000/admin
+http://localhost:8000/ping
 http://localhost:8000/v1/docs
 ```
 
 <a id="deploying_prod"></a>
 ### Deploying application in production
-
 To deploy to production the following environment variables must be defined:
 ```shell script
 export SIMPLE_SETTINGS=core.settings.production
 export GUNICORN_WORKERS=1
 export SECRET_KEY="your_key_here"
+export DATABASE_URL="sqlite:///db.sqlite3"
+export DATABASE_READ_URL="sqlite:///db.sqlite3"
 ```
 
 Optionals:
@@ -80,9 +85,12 @@ Optionals:
 export ALLOWED_HOSTS="*;"
 ```
 
+If this is your first time running the application on a production database,
+you should apply the migration and create the superuser.
+
 <a id="create_app"></a>
 ### Create new app
-All new apps are created in the _src/project_ directory and to create a new
+All new apps are created in the _src/apps_ directory and to create a new
 app you can run the following command:
 ```shell script
 make app name=clients
