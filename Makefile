@@ -4,17 +4,23 @@ WORKERS_GUNICORN=1
 FILE_ENV=.env-development
 
 export PYTHONPATH=src
-export SIMPLE_SETTINGS=$(PROJECT_SETTINGS)
-export DJANGO_SETTINGS_MODULE=$(PROJECT_SETTINGS)
-export GUNICORN_WORKERS=$(WORKERS_GUNICORN)
 
 ifneq (,$(wildcard $(FILE_ENV)))
     include $(FILE_ENV)
     export
 endif
 
+define SET_ENV_DOCKER_APP
+	SIMPLE_SETTINGS=$(SIMPLE_SETTINGS) \
+	GUNICORN_WORKERS=$(GUNICORN_WORKERS) \
+	SECRET_KEY=$(SECRET_KEY) \
+	DJANGO_ALLOWED_HOSTS=$(DJANGO_ALLOWED_HOSTS) \
+	DATABASE_URL=$(DATABASE_URL) \
+	DATABASE_READ_URL=$(DATABASE_READ_URL)
+endef
+
 help:  ## This help
-	@echo "To see the available Django commands, run the following command at the root of the project: python src/manage.py"
+	@echo 'To see the available Django commands, run the following command at the root of the project "python src/manage.py".'
 	@echo "For more information read the project Readme."
 	@echo
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
@@ -34,12 +40,14 @@ app:  ## Creates a new django application Ex.: make app name=products
 	@echo 'Application created in "$(PROJECT_PATH)/$(name)"'
 
 run: collectstatic  ## Run the django project
+	-$(MAKE) docker-dependencies-up
 	gunicorn -b 0.0.0.0:8000 -t 300 core.asgi:application -w $(GUNICORN_WORKERS) -k uvicorn.workers.UvicornWorker --log-level debug --reload
 
 superuser: ## Creates superuser for admin
 	python src/manage.py createsuperuser
 
 migrate:  ## Apply migrations to the database
+	-$(MAKE) docker-dependencies-up
 	python src/manage.py migrate
 
 migration:  ## Creates migration file according to the models
@@ -78,5 +86,37 @@ safety-check: ## Checks libraries safety
 	safety check -r requirements/prod.txt
 	safety check -r requirements/dev.txt
 	safety check -r requirements/test.txt
+
+
+docker-app-up: ## Create docker containers from Rest application
+	@echo "Starting application with docker..."
+	-$(MAKE) docker-dependencies-up
+	$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-app.yml up -d --build
+
+docker-app-down: ## Remove docker containers from Rest application
+	@echo "Removing docker containers from application..."
+	-$(MAKE) docker-dependencies-down
+	$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-app.yml down
+
+docker-app-logs: ## View logs in the Rest application of the docker container
+	$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-app.yml logs -f
+
+docker-app-migrate: ## Apply the database migration in the Rest application of the docker container
+	$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-app.yml exec web python manage.py migrate --noinput
+
+docker-app-superuser: ## Create superuser in docker container Rest application
+	$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-app.yml exec web python manage.py createsuperuser
+
+docker-dependencies-up: ## Creates the docker containers with the application dependencies
+	@echo "Starting docker container with application dependencies..."
+	docker-compose -f docker-compose-dependencies.yml up -d --build
+
+docker-dependencies-down: ## Removes the docker containers with the application dependencies
+	@echo "Removing docker containers with application dependencies..."
+	docker-compose -f docker-compose-dependencies.yml down
+
+docker-dependencies-downclear: ## Removes the docker containers and volumes with the application dependencies
+	@echo "Removing containers and volumes docker with application dependencies..."
+	docker-compose -f docker-compose-dependencies.yml down -v
 
 .PHONY: run shell urls info app

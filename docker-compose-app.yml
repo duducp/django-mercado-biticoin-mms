@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  web:
+    restart: on-failure
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command: gunicorn -b 0.0.0.0:8000 src.core.asgi:application -w ${GUNICORN_WORKERS} -k uvicorn.workers.UvicornWorker
+    volumes:
+      - ./:/usr/src/
+    ports:
+      - 8000:8000
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - GUNICORN_WORKERS=${GUNICORN_WORKERS}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
+      - SIMPLE_SETTINGS=${SIMPLE_SETTINGS}
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_READ_URL=${DATABASE_READ_URL}

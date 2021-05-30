@@ -12,6 +12,7 @@ Compatibility:
 - [First steps](#first_steps)
 - [Development mode](#development_mode)
 - [Deploying in production](#deploying_prod)
+- [Docker](#docker)
 - [Create new app](#create_app)
 - [Migrate and migration](#migrate_migration)
 - [Logs](#logs)
@@ -87,6 +88,22 @@ export ALLOWED_HOSTS="*;"
 
 If this is your first time running the application on a production database,
 you should apply the migration and create the superuser.
+
+<a id="docker"></a>
+### Docker
+This application makes use of Docker to facilitate during development in order to raise external dependencies (Postgres and Redis).
+
+Before executing the commands, make sure you have the docker installed on your device.
+
+See the commands available in the Makefile:
+- make **docker-app-up**: Create docker containers from Rest application.
+- make **docker-app-down**: Remove docker containers from Rest application.
+- make **docker-app-logs**: View logs in the Rest application of the docker container.
+- make **docker-app-migrate**: Apply the database migration in the Rest application of the docker container.
+- make **docker-app-superuser**: Create superuser in docker container Rest application.
+- make **docker-dependencies-up**: Creates the docker containers with the application dependencies.
+- make **docker-dependencies-down**: Removes the docker containers with the application dependencies.
+- make **docker-dependencies-downclear**: Removes the docker containers and volumes with the application dependencies.
 
 <a id="create_app"></a>
 ### Create new app
