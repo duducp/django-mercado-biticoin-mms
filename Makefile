@@ -119,4 +119,41 @@ docker-dependencies-downclear: ## Removes the docker containers and volumes with
 	@echo "Removing containers and volumes docker with application dependencies..."
 	docker-compose -f docker-compose-dependencies.yml down -v
 
+
+changelog-feature: ## Creates changelog file for new feature
+	@echo $(message) > changelog/$(filename).feature
+
+changelog-bugfix: ## Creates changelog file for bug fix
+	@echo $(message) > changelog/$(filename).bugfix
+
+changelog-doc: ## Creates changelog file for documentation improvement
+	@echo $(message) > changelog/$(filename).doc
+
+changelog-removal: ## Creates changelog file for deprecation or removal of public API
+	@echo $(message) > changelog/$(filename).removal
+
+changelog-misc: ## Creates a changelog file where the changes are not of interest to the end user
+	@echo $(message) > changelog/$(filename).misc
+
+release-patch: ## Creates patch release (0.0.1)
+	bumpversion patch --dry-run --no-tag --no-commit --list | grep new_version= | sed -e 's/new_version=//' | xargs -n 1 towncrier --yes --version
+	git commit -am 'Update CHANGELOG'
+	bumpversion patch
+	@echo 'To send the changes to the remote server run the make push command'
+
+release-minor: ## Creates minor release (0.1.0)
+	bumpversion minor --dry-run --no-tag --no-commit --list | grep new_version= | sed -e 's/new_version=//' | xargs -n 1 towncrier --yes --version
+	git commit -am 'Update CHANGELOG'
+	bumpversion minor
+	@echo 'To send the changes to the remote server run the make push command'
+
+release-major: ## Creates major release (1.0.0)
+	bumpversion major --dry-run --no-tag --no-commit --list | grep new_version= | sed -e 's/new_version=//' | xargs -n 1 towncrier --yes --version
+	git commit -am 'Update CHANGELOG'
+	bumpversion major
+	@echo 'To send the changes to the remote server run the make push command'
+
+push: ## Push commits and tags to the remote Git repository
+	git push && git push --tags
+
 .PHONY: run shell urls info app

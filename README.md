@@ -14,6 +14,7 @@ Compatibility:
 - [Deploying in production](#deploying_prod)
 - [Docker](#docker)
 - [Create new app](#create_app)
+- [Application code versioning](#app_versioning)
 - [Migrate and migration](#migrate_migration)
 - [Logs](#logs)
 - [Correlation ID](#correlation_id)
@@ -115,6 +116,47 @@ make app name=clients
 
 Note that the _name_ parameter has been passed. It is used to inform the name
 of the application.
+
+<a id="app_versioning"></a>
+### Application code versioning
+A good practice it is always good to create a _changelog_ file in each
+completed task in order to keep a history of the change. For that we have some
+commands:
+
+- changelog-feature: signifying a new feature
+- changelog-bugfix: signifying a bug fix
+- changelog-doc: signifying a documentation improvement
+- changelog-removal: signifying a deprecation or removal of public API
+
+Each of these commands expects the **filename** and **message** parameter. You
+can use them as follows:
+
+```shell script
+make changelog-feature filename="create-crud-client" message="Adds CRUD for clients management"
+```
+
+When a story is finished it is time to create a new version for the
+application. All _changelog_ files in existence will be converted to a single
+message that will be available in the _CHANGELOG_ file.
+
+There are three commands that we use to close the version. Are they:
+
+- release-patch: create patch release eg 0.0.1
+- release-minor: create minor release eg 0.1.0
+- release-major: create major release eg 1.0.0
+
+You can use them as follows:
+```shell script
+make release-patch
+```
+
+After running the specific command, two new commits will be created, one
+referring to the generation of the changelog file and the other referring to
+the generation of the new version of the application. In addition to these new
+commits, a specific tag for the application version is also generated.
+
+Finally, you can submit all changes to your git repository with the `make push`
+command.
 
 <a id="migrate_migration"></a>
 ### Migrate and migration
