@@ -25,6 +25,15 @@ help:  ## This help
 	@echo
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) | sort
 
+clean: ## Clean local environment
+	@find . -name "*.pyc" | xargs rm -rf
+	@find . -name "*.pyo" | xargs rm -rf
+	@find . -name "__pycache__" -type d | xargs rm -rf
+	@rm -f .coverage
+	@rm -rf htmlcov/
+	@rm -f coverage.xml
+	@rm -f *.log
+
 dependencies: ## Install development dependencies
 	pip install -U -r requirements/dev.txt
 	pre-commit install
@@ -118,6 +127,22 @@ docker-dependencies-down: ## Removes the docker containers with the application 
 docker-dependencies-downclear: ## Removes the docker containers and volumes with the application dependencies
 	@echo "Removing containers and volumes docker with application dependencies..."
 	docker-compose -f docker-compose-dependencies.yml down -v
+
+
+test: clean ## Run the application unit tests
+	pytest -x
+
+test-matching: clean ## Run the match tests
+	pytest -x -k $(q) --pdb
+
+test-coverage: clean ## Performs tests with coverage
+	pytest -x --cov=src/ --cov-report=term-missing --cov-report=xml
+
+test-coverage-html: clean ## Run tests with coverage and generate html report
+	pytest -x --cov=src/ --cov-report=html:htmlcov
+
+test-coverage-html-server: test-coverage-html ## Run tests with coverage and open the server to view coverage
+	cd htmlcov && python -m http.server 8001 --bind 0.0.0.0
 
 
 changelog-feature: ## Creates changelog file for new feature
