@@ -13,6 +13,7 @@ Compatibility:
 - [Development mode](#development_mode)
 - [Production mode](#deploying_prod)
 - [Docker](#docker)
+- [Celery worker and beat](#celery)
 - [Create new app](#create_app)
 - [Application code versioning](#app_versioning)
 - [Migrate and migration](#migrate_migration)
@@ -77,9 +78,11 @@ To deploy to production the following environment variables must be defined:
 ```shell script
 export SIMPLE_SETTINGS=project.core.settings.production
 export GUNICORN_WORKERS=1
+export CELERY_WORKER_CONCURRENCY=1
 export SECRET_KEY="your_key_here"
 export DATABASE_URL="sqlite:///db.sqlite3"
 export DATABASE_READ_URL="sqlite:///db.sqlite3"
+export CELERY_BROKER_URL="redis://127.0.0.1:6379/1"
 ```
 
 Optionals:
@@ -97,14 +100,46 @@ This application makes use of Docker to facilitate during development in order t
 Before executing the commands, make sure you have the docker installed on your device.
 
 See the commands available in the Makefile:
+- make **docker-up-all**: Start all docker container from application.
+- make **docker-down-all**: Removes all docker container from application.
+- make **docker-restart-all**: Restart all docker container from application.
+
+
+- make **docker-dependencies-up**: Creates the docker containers with the application dependencies.
+- make **docker-dependencies-down**: Removes the docker containers with the application dependencies.
+- make **docker-dependencies-downclear**: Removes the docker containers and volumes with the application dependencies.
+
+
 - make **docker-app-up**: Create docker containers from Rest application.
 - make **docker-app-down**: Remove docker containers from Rest application.
 - make **docker-app-logs**: View logs in the Rest application of the docker container.
 - make **docker-app-migrate**: Apply the database migration in the Rest application of the docker container.
 - make **docker-app-superuser**: Create superuser in docker container Rest application.
-- make **docker-dependencies-up**: Creates the docker containers with the application dependencies.
-- make **docker-dependencies-down**: Removes the docker containers with the application dependencies.
-- make **docker-dependencies-downclear**: Removes the docker containers and volumes with the application dependencies.
+
+
+- make **docker-celery-run**: Create docker containers from Celery workers and beat.
+- make **docker-celery-down**: Removes the docker containers and volumes with the application dependencies.
+- make **docker-celery-logs**: View logs in the Celery worker and beat of the docker container.
+
+<a id="celery"></a>
+### Celery tasks and beat
+In this application it is possible to create tasks that can be executed from
+time to time or that can be executed when requested. All this logic is done
+using the [Celery](https://docs.celeryproject.org/en/stable) library.
+
+Its operation consists of two apps, being the worker and the beat.
+- The beat is just the application that from time to time calls a task to be
+  executed, according to the configuration defined in the settings. This
+  application is very lightweight and doesn't need to be scaled.
+- The worker is the application that receives the beat message or some internal
+  command of the rest application and starts processing the task according to
+  what is defined in it.
+
+Within each app we configure a file called _tasks.py_ and in that file we write
+the task code.
+
+In the section [Docker](#docker) you will find some commands to create
+containers for Celery application.
 
 <a id="create_app"></a>
 ### Create new app

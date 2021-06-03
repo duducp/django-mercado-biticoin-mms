@@ -95,6 +95,7 @@ if ADMIN_ENABLED:
 THIRD_PARTY_APPS = [
     'django_extensions',
     'django_dbconn_retry',
+    'django_celery_beat',
     'cid.apps.CidAppConfig',
 ]
 
@@ -212,7 +213,12 @@ LOGGING = {
         'django.db.backends': {
             'handlers': ['stdout'],
             'level': 'DEBUG'
-        }
+        },
+        'celery': {
+            'handlers': ['stdout'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
     }
 }
 
@@ -238,3 +244,15 @@ structlog.configure(
     wrapper_class=structlog.stdlib.BoundLogger,
     cache_logger_on_first_use=True,
 )
+
+
+# Celery (https://docs.celeryproject.org/en/latest/userguide/configuration.html) # noqa
+CELERY_TIME_ZONE = TIME_ZONE
+CELERY_WORKER_ENABLE_REMOTE_CONTROL = False
+CELERY_WORKER_SEND_TASK_EVENTS = False
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_CONTENT_ENCODING = 'utf-8'
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/1')

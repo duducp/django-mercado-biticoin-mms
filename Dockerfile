@@ -15,8 +15,9 @@ COPY ./requirements/base.txt .
 COPY ./requirements/test.txt .
 COPY ./requirements/dev.txt .
 COPY ./requirements/prod.txt .
-RUN pip install -r prod.txt
-RUN pip install -r dev.txt
+RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip pip cache list
+RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip pip install -r prod.txt
+RUN --mount=type=cache,id=custom-pip,target=/root/.cache/pip pip install -r dev.txt
 
 # copy project
 COPY . .

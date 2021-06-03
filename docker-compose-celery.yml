@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  celery:
+    restart: on-failure
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command: celery --workdir=src -A project.core.celery worker --concurrency=${CELERY_WORKER_CONCURRENCY} -l info -Ofair --without-mingle --without-gossip --without-heartbeat
+    volumes:
+      - celery_data:/usr/src/celery/
+    networks:
+      - mms_network
+    external_links:
+      - postgres:postgres
+      - redis:redis
+    env_file:
+      - .env-development
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_READ_URL=${DATABASE_READ_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+  celery-beat:
+    restart: on-failure
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command: celery --workdir=src -A project.core.celery beat -l info -S django
+    volumes:
+      - celery_beat_data:/usr/src/celery-beat/
+    networks:
+      - mms_network
+    external_links:
+      - postgres:postgres
+      - redis:redis
+    env_file:
+      - .env-development
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DATABASE_READ_URL=${DATABASE_READ_URL}
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+
+volumes:
+  celery_data:
+  celery_beat_data:
+
+networks:
+  mms_network:
+    driver: bridge

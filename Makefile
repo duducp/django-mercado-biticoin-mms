@@ -9,12 +9,10 @@ ifneq (,$(wildcard $(FILE_ENV)))
 endif
 
 define SET_ENV_DOCKER_APP
-	SIMPLE_SETTINGS=$(SIMPLE_SETTINGS) \
-	GUNICORN_WORKERS=$(GUNICORN_WORKERS) \
-	SECRET_KEY=$(SECRET_KEY) \
-	ALLOWED_HOSTS=$(ALLOWED_HOSTS) \
-	DATABASE_URL=$(DATABASE_URL) \
-	DATABASE_READ_URL=$(DATABASE_READ_URL)
+	DOCKER_BUILDKIT=1 \
+	DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres \
+	DATABASE_READ_URL=postgres://postgres:postgres@postgres:5432/postgres \
+	CELERY_BROKER_URL=redis://redis:6379/1
 endef
 
 help:  ## This help
@@ -54,7 +52,7 @@ run: collectstatic  ## Run the django project
 superuser: ## Creates superuser for admin
 	python src/manage.py createsuperuser
 
-migrate:  ## Apply migrations to the database
+migrate: migration  ## Apply migrations to the database
 	-$(MAKE) docker-dependencies-up
 	python src/manage.py migrate
 
@@ -95,6 +93,30 @@ safety-check: ## Checks libraries safety
 	safety check -r requirements/test.txt
 
 
+docker-up-all: ## Start all docker container from application
+	@echo "Starting all containers docker..."
+	-$(MAKE) docker-dependencies-up
+	-$(MAKE) docker-app-up
+	-$(MAKE) docker-celery-up
+	@echo
+	-$(shell) docker ps
+
+docker-down-all: ## Removes all docker container from application
+	@echo "Removing all containers docker..."
+	-$(MAKE) docker-app-down
+	-$(MAKE) docker-celery-down
+	-$(MAKE) docker-dependencies-down
+	@echo
+	-$(shell) docker ps
+
+docker-restart-all: ## Restart all docker container from application
+	@echo "Restarting all containers docker..."
+	-$(MAKE) docker-app-restart
+	-$(MAKE) docker-celery-restart
+	-$(MAKE) docker-dependencies-restart
+	@echo
+	-$(shell) docker ps
+
 docker-app-up: ## Create docker containers from Rest application
 	@echo "Starting application with docker..."
 	-$(MAKE) docker-dependencies-up
@@ -102,11 +124,16 @@ docker-app-up: ## Create docker containers from Rest application
 
 docker-app-down: ## Remove docker containers from Rest application
 	@echo "Removing docker containers from application..."
-	-$(MAKE) docker-dependencies-down
-	$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-app.yml down
+	-$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-app.yml down
+	@echo
+	@echo "To also remove dependency containers you must run the command 'docker-dependencies-down'"
 
 docker-app-logs: ## View logs in the Rest application of the docker container
 	$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-app.yml logs -f
+
+docker-app-restart: ## Restart the docker container from Rest application
+	@echo "Restarting docker containers Rest application..."
+	$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-app.yml restart
 
 docker-app-migrate: ## Apply the database migration in the Rest application of the docker container
 	$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-app.yml exec web python manage.py migrate --noinput
@@ -114,17 +141,49 @@ docker-app-migrate: ## Apply the database migration in the Rest application of t
 docker-app-superuser: ## Create superuser in docker container Rest application
 	$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-app.yml exec web python manage.py createsuperuser
 
+docker-celery-up: ## Create docker containers from Celery
+	@echo "Starting Celery worker with docker..."
+	-$(MAKE) docker-dependencies-up
+	$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-celery.yml up -d --build
+
+docker-celery-down: ## Remove docker containers from Celery
+	@echo "Removing docker containers from Celery..."
+	-$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-celery.yml down
+	@echo
+	@echo "To also remove dependency containers you must run the command 'docker-dependencies-down'"
+
+docker-celery-logs: ## View logs in the Celery of the docker container
+	$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-celery.yml logs -f
+
+docker-celery-restart: ## Restart the docker container from Celery
+	@echo "Restarting docker containers from Celery..."
+	$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-celery.yml restart
+
 docker-dependencies-up: ## Creates the docker containers with the application dependencies
 	@echo "Starting docker container with application dependencies..."
 	docker-compose -f docker-compose-dependencies.yml up -d --build
 
 docker-dependencies-down: ## Removes the docker containers with the application dependencies
 	@echo "Removing docker containers with application dependencies..."
-	docker-compose -f docker-compose-dependencies.yml down
+	-docker-compose -f docker-compose-dependencies.yml down
 
 docker-dependencies-downclear: ## Removes the docker containers and volumes with the application dependencies
 	@echo "Removing containers and volumes docker with application dependencies..."
-	docker-compose -f docker-compose-dependencies.yml down -v
+	-docker-compose -f docker-compose-dependencies.yml down -v
+
+docker-dependencies-restart: ## Restart the docker container from dependencies
+	@echo "Restarting docker containers application dependencies..."
+	docker-compose -f docker-compose-dependencies.yml restart
+
+
+celery-run:  ## Start Celery worker
+	celery --workdir=src -A project.core.celery worker --concurrency=1 -l debug -Ofair --without-mingle --without-gossip --without-heartbeat
+
+celery-queue-run:  ## Start Celery worker queue Ex.: make celery-queue-run queue=
+	celery --workdir=src -A project.core.celery worker --concurrency=1 -l debug -Ofair --without-mingle --without-gossip --without-heartbeat -Q $(queue)
+
+celery-beat-run:  ## Start Celery Beat
+	celery --workdir=src -A project.core.celery beat -l info -S django
 
 
 test: clean ## Run the application unit tests
