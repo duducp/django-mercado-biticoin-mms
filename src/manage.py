@@ -26,7 +26,7 @@ def set_settings_module():
         os.getenv('DJANGO_SETTINGS_MODULE')
     )
     if not _settings:
-        _settings = 'core.settings.development'
+        _settings = 'project.core.settings.development'
 
     os.environ.setdefault('SIMPLE_SETTINGS', _settings)
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', _settings)

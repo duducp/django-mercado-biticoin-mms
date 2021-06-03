@@ -8,11 +8,12 @@ from django.utils.translation import gettext_lazy as _
 import dj_database_url
 import structlog
 
-from core import __version__
-from core.logging import processors
+from project import __version__
+from project.core.logging import processors
 
 CORE_DIR = os.path.dirname(os.path.dirname(__file__))
-SRC_DIR = os.path.dirname(CORE_DIR)
+PROJECT_DIR = os.path.dirname(CORE_DIR)
+SRC_DIR = os.path.dirname(PROJECT_DIR)
 BASE_DIR = os.path.dirname(SRC_DIR)
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -21,8 +22,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', '65145e56-8c4f-4434-b451-6e0e3214640e')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(strtobool(os.getenv('DEBUG', 'False')))
 
-WSGI_APPLICATION = 'core.wsgi.application'
-ROOT_URLCONF = 'urls'
+WSGI_APPLICATION = 'project.core.wsgi.application'
+ROOT_URLCONF = 'project.urls'
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '*').split(';')
 
 VERSION = __version__
@@ -39,7 +40,7 @@ STATIC_URL = '/statics/'
 ADMIN_URL = 'admin/'
 ADMIN_ENABLED = strtobool(os.getenv('ADMIN_ENABLED', 'true'))
 ADMIN_SITE_HEADER = 'Django Administration'
-ADMIN_SITE_TITLE = 'MMV'
+ADMIN_SITE_TITLE = 'Mercado Bitcoin'
 
 LOGIN_URL = reverse_lazy('admin:login')
 LOGOUT_URL = reverse_lazy('admin:logout')
@@ -98,7 +99,7 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    'apps.ping.apps.PingConfig',
+    'project.ping.apps.PingConfig',
 ]
 
 INSTALLED_APPS = DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -121,8 +122,8 @@ THIRD_PARTY_MIDDLEWARE = [
 ]
 
 LOCAL_MIDDLEWARE = [
-    'core.middlewares.version_header.VersionHeaderMiddleware',
-    'core.middlewares.access_logging.AccessLoggingMiddleware',
+    'project.core.middlewares.version_header.VersionHeaderMiddleware',
+    'project.core.middlewares.access_logging.AccessLoggingMiddleware',
 ]
 
 MIDDLEWARE = DEFAULT_MIDDLEWARE + THIRD_PARTY_MIDDLEWARE + LOCAL_MIDDLEWARE
@@ -161,7 +162,7 @@ DATABASES = {
     )
 }
 
-DATABASE_ROUTERS = ['core.databases.DatabaseRouter']
+DATABASE_ROUTERS = ['project.core.databases.DatabaseRouter']
 
 # Type default for primary key fields (https://docs.djangoproject.com/en/3.2/topics/db/models/#automatic-primary-key-fields) # noqa
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -184,7 +185,7 @@ LOGGING = {
             '()': 'django.utils.log.RequireDebugFalse',
         },
         'ignore_if_contains': {
-            '()': 'core.logging.filters.IgnoreIfContains',
+            '()': 'project.core.logging.filters.IgnoreIfContains',
             'substrings': ['/ping'],
         },
     },

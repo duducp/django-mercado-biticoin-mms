@@ -6,7 +6,7 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile
-    command: gunicorn -b 0.0.0.0:8000 src.core.asgi:application -w ${GUNICORN_WORKERS} -k uvicorn.workers.UvicornWorker
+    command: gunicorn -b 0.0.0.0:8000 src.project.core.asgi:application -w ${GUNICORN_WORKERS} -k uvicorn.workers.UvicornWorker
     volumes:
       - ./:/usr/src/
     ports:
@@ -14,7 +14,7 @@ services:
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - GUNICORN_WORKERS=${GUNICORN_WORKERS}
-      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
       - SIMPLE_SETTINGS=${SIMPLE_SETTINGS}
       - DATABASE_URL=${DATABASE_URL}
       - DATABASE_READ_URL=${DATABASE_READ_URL}

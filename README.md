@@ -11,7 +11,7 @@ Compatibility:
 ## Navigation
 - [First steps](#first_steps)
 - [Development mode](#development_mode)
-- [Deploying in production](#deploying_prod)
+- [Production mode](#deploying_prod)
 - [Docker](#docker)
 - [Create new app](#create_app)
 - [Application code versioning](#app_versioning)
@@ -21,48 +21,48 @@ Compatibility:
 
 <a id="first_steps"></a>
 ### First steps
-First, you must configure the virtual environment:
+1- You must configure the virtual environment:
 ```shell script
 python -m venv venv
 ```
 
-After that activate virtualenv:
+2- Activate the virtualenv:
 ```shell script
 source venv/bin/activate
 ```
 
-Run the command to install the development dependencies:
+3- Run the command to install the development dependencies:
 ```shell script
 make dependencies
 ```
 
-Last and most important set the environment variables by cloning the
-**.env-sample** file to **.env-development**
+4- Copy file .env-sample and rename to .env-development
+```shell script
+cp .env-sample .env-development
+```
 
 <a id="development_mode"></a>
 ### Development mode
 The development mode by default uses Postgres as a database.
 
-Run the command to create the tables in the database:
+1- Run the command to create the tables in the database:
 ```shell script
 make migrate
 ```
 
-To access the admin it is necessary to create the superuser. This can be done
-with the following command:
+2- To access the admin it is necessary to create the superuser.
+This can be done with the following command:
 ```shell script
 make superuser
 ```
 
-To see which routes exist in the application, execute the command:
-```shell script
-make urls
-```
-
-Now just run the command below to run the application:
+3- Now just run the command below to run the application:
 ```shell script
 make run
 ```
+
+You can also run the application in a docker container.
+See section [Docker](#docker).
 
 After running the command above, you can access the documentation and the administrative panel:
 ```
@@ -72,10 +72,10 @@ http://localhost:8000/v1/docs
 ```
 
 <a id="deploying_prod"></a>
-### Deploying application in production
+### Production mode
 To deploy to production the following environment variables must be defined:
 ```shell script
-export SIMPLE_SETTINGS=core.settings.production
+export SIMPLE_SETTINGS=project.core.settings.production
 export GUNICORN_WORKERS=1
 export SECRET_KEY="your_key_here"
 export DATABASE_URL="sqlite:///db.sqlite3"

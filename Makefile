@@ -1,6 +1,4 @@
-PROJECT_PATH=./src/apps
-PROJECT_SETTINGS=core.settings.development
-WORKERS_GUNICORN=1
+PROJECT_PATH=./src/project
 FILE_ENV=.env-development
 
 export PYTHONPATH=src
@@ -14,7 +12,7 @@ define SET_ENV_DOCKER_APP
 	SIMPLE_SETTINGS=$(SIMPLE_SETTINGS) \
 	GUNICORN_WORKERS=$(GUNICORN_WORKERS) \
 	SECRET_KEY=$(SECRET_KEY) \
-	DJANGO_ALLOWED_HOSTS=$(DJANGO_ALLOWED_HOSTS) \
+	ALLOWED_HOSTS=$(ALLOWED_HOSTS) \
 	DATABASE_URL=$(DATABASE_URL) \
 	DATABASE_READ_URL=$(DATABASE_READ_URL)
 endef
@@ -51,7 +49,7 @@ app:  ## Creates a new django application Ex.: make app name=products
 
 run: collectstatic  ## Run the django project
 	-$(MAKE) docker-dependencies-up
-	gunicorn -b 0.0.0.0:8000 -t 300 core.asgi:application -w $(GUNICORN_WORKERS) -k uvicorn.workers.UvicornWorker --log-level debug --reload
+	gunicorn -b 0.0.0.0:8000 -t 300 project.core.asgi:application -w $(GUNICORN_WORKERS) -k uvicorn.workers.UvicornWorker --log-level debug --reload
 
 superuser: ## Creates superuser for admin
 	python src/manage.py createsuperuser

@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class PingConfig(AppConfig):
-    name = 'apps.ping'
+    name = 'project.ping'
     verbose_name = 'PingPong'

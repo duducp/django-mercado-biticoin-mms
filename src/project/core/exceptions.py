@@ -21,7 +21,8 @@ def custom_handler_404(request, exception, *args, **kwargs):
             code='not_found',
             status_code=HTTPStatus.NOT_FOUND
         )),
-        status=HTTPStatus.NOT_FOUND
+        status=HTTPStatus.NOT_FOUND,
+        headers={'Content-Type': 'application/json'}
     )
 
 
@@ -32,5 +33,6 @@ def custom_handler_500(request, *args, **kwargs):
             code='internal_error',
             status_code=HTTPStatus.INTERNAL_SERVER_ERROR
         )),
-        status=HTTPStatus.INTERNAL_SERVER_ERROR
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        headers={'Content-Type': 'application/json'}
     )

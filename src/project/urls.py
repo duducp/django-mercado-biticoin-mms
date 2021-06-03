@@ -5,9 +5,9 @@ from django.urls import path
 from ninja import NinjaAPI
 from simple_settings import settings
 
-from apps.ping.views import router as ping_router
-from core.exceptions import custom_handler_404, custom_handler_500
-from core.renderers import RendererDefault
+from project.core.exceptions import custom_handler_404, custom_handler_500
+from project.core.renderers import RendererDefault
+from project.ping.views import router as ping_router
 
 # Handler Errors
 handler404 = custom_handler_404
@@ -24,8 +24,8 @@ api.add_router('ping/', ping_router)
 # Routes V1
 api_v1 = NinjaAPI(
     version='1.0.0',
-    title='Médias Móveis Simples',
-    description='Serviço que entrega as variações de médias móveis simples, de 20, 50 e 200 dias, das moedas Bitcoin e Etherium que são listadas no Mercado Bitcoin.',  # noqa
+    title='Indicators - Mercado Bitcoin',
+    description='',
     renderer=RendererDefault()
 )
 
