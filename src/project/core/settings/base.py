@@ -210,6 +210,16 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'aiohttp': {
+            'handlers': ['stdout'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'aiohttp-retry': {
+            'handlers': ['stdout'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
         'django.db.backends': {
             'handlers': ['stdout'],
             'level': 'DEBUG'
@@ -256,3 +266,13 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_CONTENT_ENCODING = 'utf-8'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/1')
+
+
+# Settings for applications
+SERVICES = {
+    'candles': {
+        'url': os.getenv('SERVICE_CANDLE_URL', 'http://localhost/'),
+        'timeout': float(os.getenv('SERVICE_CANDLE_TIMEOUT', '2')),
+        'max_retries': int(os.getenv('SERVICE_CANDLE_MAX_RETRIES', '3')),
+    }
+}
