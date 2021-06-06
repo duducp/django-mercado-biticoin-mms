@@ -162,6 +162,9 @@ CACHES = {
         }
     },
 }
+CACHE_LIFETIME = {
+    'mms_retrieve': int(os.getenv('CACHE_LIFETIME_MMS_RETRIEVE', 600))
+}
 
 # Database django connection settings (https://docs.djangoproject.com/en/3.2/ref/databases) # noqa
 DATABASES = {

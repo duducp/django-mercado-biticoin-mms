@@ -1,5 +1,7 @@
 from decimal import Decimal
-from typing import List
+from typing import List, Union
+
+from django.db.models import QuerySet
 
 from asgiref.sync import sync_to_async
 
@@ -68,4 +70,20 @@ def save_simple_moving_average_database(
         mms_50=mms_50,
         mms_200=mms_200,
         timestamp=timestamp
+    )
+
+
+def get_simple_moving_average_variations(
+    pair: str,
+    precision: str,
+    from_timestamp: int,
+    to_timestamp: int,
+) -> Union[QuerySet, List[SimpleMovingAverage]]:
+    """
+    Filters out simple moving average variations in the database
+    """
+    return SimpleMovingAverage.objects.filter(
+        pair=pair,
+        precision=precision,
+        timestamp__range=(from_timestamp, to_timestamp),
     )
