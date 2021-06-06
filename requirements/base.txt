@@ -7,6 +7,7 @@ django-celery-beat==2.2.0
 django-cid==2.2
 django-dbconn-retry==0.1.5
 django-ninja==0.13.2
+django-redis==5.0.0
 gunicorn==20.1.0
 httptools==0.2.0
 orjson==3.5.3

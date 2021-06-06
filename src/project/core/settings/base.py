@@ -131,6 +131,37 @@ LOCAL_MIDDLEWARE = [
 
 MIDDLEWARE = DEFAULT_MIDDLEWARE + THIRD_PARTY_MIDDLEWARE + LOCAL_MIDDLEWARE
 
+# Redis connection settings (https://github.com/jazzband/django-redis)
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.getenv(
+            'REDIS_URL', 'redis://127.0.0.1:6379/0'
+        ).split(';'),
+        'KEY_PREFIX': 'default',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
+            'CONNECTION_POOL_KWARGS': {
+                'retry_on_timeout': True
+            }
+        }
+    },
+    'lock': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': os.getenv(
+            'REDIS_URL_LOCK', 'redis://127.0.0.1:6379/0'
+        ).split(';'),
+        'KEY_PREFIX': 'lock',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+            'CONNECTION_POOL_KWARGS': {
+                'retry_on_timeout': True
+            }
+        }
+    },
+}
+
 # Database django connection settings (https://docs.djangoproject.com/en/3.2/ref/databases) # noqa
 DATABASES = {
     'default': dj_database_url.parse(

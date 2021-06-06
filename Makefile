@@ -12,7 +12,9 @@ define SET_ENV_DOCKER_APP
 	DOCKER_BUILDKIT=1 \
 	DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres \
 	DATABASE_READ_URL=postgres://postgres:postgres@postgres:5432/postgres \
-	CELERY_BROKER_URL=redis://redis:6379/1
+	CELERY_BROKER_URL=redis://redis:6379/1 \
+	REDIS_URL=redis://redis:6379/1 \
+	REDIS_URL_LOCK=redis://redis:6379/1
 endef
 
 help:  ## This help
