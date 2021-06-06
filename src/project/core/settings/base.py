@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 import dj_database_url
 import structlog
+from celery.schedules import crontab
 from kombu import Exchange, Queue
 
 from project import __version__
@@ -306,7 +307,23 @@ CELERY_TASK_QUEUES = (
         exchange=Exchange('indicator-mms-calculate', type='direct'),
         routing_key='indicator-mms-calculate',
     ),
+    Queue(
+        name='indicator-mms-select-pairs',
+        exchange=Exchange('indicator-mms-select-pairs', type='direct'),
+        routing_key='indicator-mms-select-pairs',
+    ),
 )
+
+CELERY_BEAT_SCHEDULE = {
+    'indicator-mms-select-pairs': {
+        'task': (
+            'project.indicators.mms.tasks.task_beat_select_pairs_to_mms'
+        ),
+        'schedule': crontab(
+            hour=os.getenv('CELERY_BEAT_HOUR_SELECT_PAIRS_TO_MMS', '*/1')
+        )
+    },
+}
 
 
 # Settings for applications
