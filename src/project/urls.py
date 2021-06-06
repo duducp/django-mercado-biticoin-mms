@@ -7,6 +7,7 @@ from simple_settings import settings
 
 from project.core.exceptions import custom_handler_404, custom_handler_500
 from project.core.renderers import RendererDefault
+from project.indicators.urls import router as indicators_router
 from project.ping.views import router as ping_router
 
 # Handler Errors
@@ -28,6 +29,7 @@ api_v1 = NinjaAPI(
     description='',
     renderer=RendererDefault()
 )
+api_v1.add_router('indicators/', indicators_router),
 
 # Declared routes
 urlpatterns = [

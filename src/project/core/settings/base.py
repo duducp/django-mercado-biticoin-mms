@@ -101,6 +101,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     'project.ping.apps.PingConfig',
+    'project.indicators.mms.apps.MmsConfig',
 ]
 
 INSTALLED_APPS = DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
