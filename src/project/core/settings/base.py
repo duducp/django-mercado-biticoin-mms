@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 import dj_database_url
 import structlog
+from kombu import Exchange, Queue
 
 from project import __version__
 from project.core.logging import processors
@@ -267,6 +268,14 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_CONTENT_ENCODING = 'utf-8'
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/1')
+
+CELERY_TASK_QUEUES = (
+    Queue(
+        name='indicator-mms-calculate',
+        exchange=Exchange('indicator-mms-calculate', type='direct'),
+        routing_key='indicator-mms-calculate',
+    ),
+)
 
 
 # Settings for applications

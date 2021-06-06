@@ -1,0 +1,2 @@
+class CalculateMmsCountCandlesException(Exception):
+    pass
