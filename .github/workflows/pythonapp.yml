@@ -1,0 +1,45 @@
+name: Python application
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: "src"
+      SIMPLE_SETTINGS: "project.core.settings.test"
+      DJANGO_SETTINGS_MODULE: "project.core.settings.test"
+
+    steps:
+    - uses: actions/checkout@v2
+    - run: |
+        git fetch --prune --unshallow
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements/prod.txt
+    - name: Lint
+      run: |
+        pip install django-stubs isort sort-requirements flake8 flake8-quotes pycodestyle
+        isort .
+        sort-requirements requirements/base.txt
+        sort-requirements requirements/prod.txt
+        sort-requirements requirements/dev.txt
+        sort-requirements requirements/test.txt
+        flake8 --show-source .
+        pycodestyle --show-source .
+    - name: Safety check
+      run: |
+        pip install safety
+        safety check -r requirements/base.txt
+        safety check -r requirements/prod.txt
+        safety check -r requirements/dev.txt
+        safety check -r requirements/test.txt
+    - name: Test and Coverage
+      run: |
+        pip install -r requirements/test.txt
+        pytest -x --cov=src/project/ --cov-fail-under=95
