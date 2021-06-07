@@ -123,6 +123,7 @@ docker-app-up: ## Create docker containers from Rest application
 	@echo "Starting application with docker..."
 	-$(MAKE) docker-dependencies-up
 	$(SET_ENV_DOCKER_APP) docker-compose -f docker-compose-app.yml up -d --build
+	@echo "Application running on http://localhost:8000"
 
 docker-app-down: ## Remove docker containers from Rest application
 	@echo "Removing docker containers from application..."

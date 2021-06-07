@@ -1,71 +1,173 @@
 # Médias Móveis Simples
 
-Main dependencies:
+O objetivo do projeto é entregar variações de médias móveis simples,
+de 20, 50 e 200 dias, das moedas Bitcoin e Etherium que são listadas no
+Mercado Bitcoin via api Rest. Para isso temos que calcular diariamente a
+média móvel simples das moedas sendo isso feito por workers desenvolvidos
+utilizando o Celery.
+
+Principais dependências:
 - Django
 - Django Ninja
+- Celery
 
-Compatibility:
+Compatibilidade:
 - Python 3.9.5
-- Django 3.2.3
+- Django 3.2.4
 
-## Navigation
-- [First steps](#first_steps)
-- [Development mode](#development_mode)
-- [Production mode](#deploying_prod)
+## Índice
+- [Sobre o projeto](#about)
+  - [Api rest](#about_api)
+  - [Beat](#about_beat)
+  - [Worker](#about_worker)
+- [Primeiros passos para executar o projeto localmente](#first_steps)
+- [Modo de desenvolvimento](#development_mode)
+- [Modo de produção](#deploying_prod)
+- [Scripts de carga inicial no banco de dados](#initial_charge)
 - [Docker](#docker)
-- [Celery worker and beat](#celery)
-- [Create new app](#create_app)
-- [Application code versioning](#app_versioning)
-- [Migrate and migration](#migrate_migration)
+- [Celery](#celery)
+- [Testes](#tests)
 - [Logs](#logs)
 - [Correlation ID](#correlation_id)
+- [Criando um novo aplicativo Django](#create_app)
+- [Changelog e versionamento do código](#app_versioning)
+  - [Changelog](#changelog)
+  - [Versionamento](#versioning)
+- [Migrate e migration](#migrate_migration)
+
+<a id="about"></a>
+### Sobre o projeto
+O projeto está dividido em três aplicações: api web rest, worker e beat.
+
+<a id="about_api"></a>
+#### Api Rest
+A api rest é o ponto de entrada principal que expõe as rotas de acesso externo.
+
+A rota principal da API é a de indicadores de média móvel simples. Ela é
+responsável por filtrar as variações das médias no banco de dados.
+
+Para evitar alto número de requisições ao banco de dados, essa rota tem um
+cache com duração de 10 minutos.
+
+```shell
+curl --location --request GET 'http://localhost:8000/v1/indicators/BRLBTC/mms?range=20&from=1622469710&to=1622401310'
+```
+
+Os parâmetros que podem ser informados são:
+
+|Parâmetro  |Local  |Tipo   |Obrigatório|Opções         |Descrição                                          |
+|-----------|-------|-------|-----------|---------------|---------------------------------------------------|
+|pair       |path   |texto  |Sim        |BRLBTC, BRLETH |Pair da moeda que deve ser pesquisado.             |
+|range      |query  |número |Sim        |20, 50, 200    |Quantidade de dias da média móvel.                 |
+|from       |query  |número |Sim        |               |Data inicial de pesquisa.                          |
+|to         |query  |número |Não        |               |Data final de pesquisa. Padrão é o dia anterior.   |
+|precision  |query  |texto  |Não        |1d             |Precisão da média móvel. Padrão é 1d.              |
+
+Mais informações podem ser obtidos na documentação: http://localhost:8000/v1/docs
+
+<a id="about_beat"></a>
+#### Beat
+O _beat_ é uma aplicação schedule, de tempos em tempos ele chama as tasks que
+está programado. Essa configuração pode ser feita pelo Django Admin ou pelo
+próprio settings do projeto.
+
+Se acessar `src/project/core/settings/base.py` e procurar pela variável de ambiente
+_CELERY_BEAT_SCHEDULE_ verá que existe uma configuração para ele. Essa
+configuração diz que a task _task_beat_select_pairs_to_mms_ deve ser chamada
+a cada uma hora. Com isso a cada uma hora o _beat_ irá publicar uma mensagem
+na fila _indicator-mms-select-pairs_ e o _worker_ irá consumir essa mensagem
+e começar a executar a task.
+
+<a id="about_worker"></a>
+#### Worker
+O _worker_ é uma aplicação que consome uma ou mais filas e redireciona a mensagem
+da fila para a _task_ responsável. Atualmente existem duas tasks no projeto:
+
+- **task_beat_select_pairs_to_mms**
+
+Essa task consome a fila _indicator-mms-select-pairs_ e é responsável
+diariamente por distribuir os pairs das moedas para a task que calcula a média
+móvel simples.
+
+Para garantir que a task não será executada mais de uma vez no dia, existe um
+cache lock com duração de 24 horas e caso a task já tenha sido executada no dia,
+a executação atual é descartada. Se ocorrer erro na primeira execução do dia o
+cache lock não é setado.
+
+- **task_calculate_simple_moving_average**
+
+Essa task consome a fila _indicator-mms-calculate_ e é responsável por calcular
+a média móvel simples de cada pair que ela recebe.
+
+A task recebe três parâmetros para execução:
+- pair: pair da moeda;
+- precision: precisão para cálculo da média móvel simples, por enquanto é somente 1 dia;
+- datetime_started: data e hora que a mensagem foi colocada na fila da task;
+
+Assim que a task começa a processar ela cria um cache lock para garantir que
+outro worker não irá processar o mesmo pair que ela esta processando e esse
+cache lock é removido assim que a task é finalizada.
+
+Ela identifica os parâmetros para cálculo da média e faz uma request para a API
+de Candles a fim de buscar os dados de fechamento do pair. Assim que recebe o
+retorno da API ela começa a calcular a média móvel simples salvando os dados no
+banco de dados.
+
+Caso haja algum erro durante o processamento da task, é definido um retry de 30
+minutos. Esse retry pode ocorrer inúmeras vezes ao dia e caso a data inicial de
+processamento task for menor que a data de processamento atual da task o
+processamento do pair é descartado.
 
 <a id="first_steps"></a>
-### First steps
-1- You must configure the virtual environment:
+### Primeiros passos para executar o projeto localmente
+1- Configure o ambiente virtual:
 ```shell script
 python -m venv venv
 ```
 
-2- Activate the virtualenv:
+2- Ative o ambiente virtual:
 ```shell script
 source venv/bin/activate
 ```
 
-3- Run the command to install the development dependencies:
+3- Execute o comando para instalar as dependências:
 ```shell script
 make dependencies
 ```
 
-4- Copy file .env-sample and rename to .env-development
+<a id="development_mode"></a>
+### Modo de desenvolvimento
+O modo de desenvolvimento por padrão utiliza o Postgres como banco de dados e
+Redis para cache e filas do Celery.
+
+1- Copie o arquivo _.env-sample_ e renomeie para _.env-development_.
+Aproveite e faça os ajustes necessários nas variáveis de ambiente:
 ```shell script
 cp .env-sample .env-development
 ```
 
-<a id="development_mode"></a>
-### Development mode
-The development mode by default uses Postgres as a database.
-
-1- Run the command to create the tables in the database:
+2- Execute o comando para criar as tabelas no banco de dados:
 ```shell script
 make migrate
 ```
 
-2- To access the admin it is necessary to create the superuser.
-This can be done with the following command:
+Ao executar o comando acima será criados os containers docker com as dependências.
+
+3- Para acessar o Django Admin é necessário criar o super usuário e isso pode
+ser feito com o seguinte comando:
 ```shell script
 make superuser
 ```
 
-3- Now just run the command below to run the application:
+4- Agora basta executar o comando abaixo para iniciar o aplicativo.
+O comando abaixo irá subir as dependências no docker e irá executar a aplicação no shell.
 ```shell script
 make run
 ```
 
-You can also run the application in a docker container.
-See section [Docker](#docker).
+Você também pode executar a aplicação em um container docker. Consulte a seção [Docker](#docker).
 
-After running the command above, you can access the documentation and the administrative panel:
+Após executar os comandos acima, você poderá acessar a documentação e o painel administrativo:
 ```
 http://localhost:8000/admin
 http://localhost:8000/ping
@@ -73,8 +175,11 @@ http://localhost:8000/v1/docs
 ```
 
 <a id="deploying_prod"></a>
-### Production mode
-To deploy to production the following environment variables must be defined:
+### Modo de produção
+O modo de produção utilizamos o servidor [gunicorn](https://gunicorn.org/)
+junto com o servidor ASGI [uvicorn](https://www.uvicorn.org/).
+
+Para implantar em produção, as seguintes variáveis de ambiente devem ser definidas na aplicação da api, worker e beat:
 ```shell script
 export SIMPLE_SETTINGS=project.core.settings.production
 export GUNICORN_WORKERS=1
@@ -83,162 +188,232 @@ export SECRET_KEY="your_key_here"
 export DATABASE_URL="sqlite:///db.sqlite3"
 export DATABASE_READ_URL="sqlite:///db.sqlite3"
 export CELERY_BROKER_URL="redis://127.0.0.1:6379/1"
+export REDIS_URL=redis://127.0.0.1:6379/0
+export REDIS_URL_LOCK=redis://127.0.0.1:6379/0
 ```
 
-Optionals:
+Opcional:
 ```shell script
 export ALLOWED_HOSTS="*;"
 ```
 
-If this is your first time running the application on a production database,
-you should apply the migration and create the superuser.
+Se esta é a primeira vez que executa o aplicativo em um banco de dados de
+produção, você deve aplicar a migração e criar o super usuário.
+
+Consulte o arquivo `core/settings/base.py` para ver todas as variáveis de ambiente disponíveis.
+
+<a id="initial_charge"></a>
+### Scripts de carga inicial no banco de dados
+Se a primeira vez que o projeto está sendo executado normalmente queremos fazer
+uma carga inicial no banco de dados.
+
+Os scripts são configurados no [management](https://docs.djangoproject.com/pt-br/3.0/howto/custom-management-commands/)
+do Django. Veja que no app `src/project/indicators/mms` existe o diretório
+`management/commands` com o arquivo _mms_initial_charge.py_. Esse arquivo é o
+script de carga inicial das variações de média móvel simples.
+
+Se você for executar o script localmente, primeiramente deve-se iniciar as
+dependências do projeto `make docker-dependencies-up`.
+
+Para executar o script basta executar o comando abaixo:
+```shell script
+python src/manage.py mms_initial_charge --days=365
+```
+
+Ao executar o comando será publicado na fila _indicator-mms-calculate_
+mensagens com data para cálculo da quantidade de dias informado no comando.
+Com isso a task _task_calculate_simple_moving_average_ irá consumir as mensagens
+e começar a calcular a média móvel do dia e pair recebido.
+
+Para que a task começa a capturar as mensagens para executar o cálculo os workers
+do Celery devem estar ligados. Se estiver executando o script localmente basta
+rodar o comando `make docker-celery-up`.
 
 <a id="docker"></a>
 ### Docker
-This application makes use of Docker to facilitate during development in order to raise external dependencies (Postgres and Redis).
+Esta aplicação faz uso do Docker para facilitar durante o desenvolvimento.
+Certifique-se de ter o docker instalado em seu dispositivo.
 
-Before executing the commands, make sure you have the docker installed on your device.
+Veja os comandos disponíveis no Makefile:
 
-See the commands available in the Makefile:
-- make **docker-up-all**: Start all docker container from application.
-- make **docker-down-all**: Removes all docker container from application.
-- make **docker-restart-all**: Restart all docker container from application.
-
-
-- make **docker-dependencies-up**: Creates the docker containers with the application dependencies.
-- make **docker-dependencies-down**: Removes the docker containers with the application dependencies.
-- make **docker-dependencies-downclear**: Removes the docker containers and volumes with the application dependencies.
-
-
-- make **docker-app-up**: Create docker containers from Rest application.
-- make **docker-app-down**: Remove docker containers from Rest application.
-- make **docker-app-logs**: View logs in the Rest application of the docker container.
-- make **docker-app-migrate**: Apply the database migration in the Rest application of the docker container.
-- make **docker-app-superuser**: Create superuser in docker container Rest application.
-
-
-- make **docker-celery-run**: Create docker containers from Celery workers and beat.
-- make **docker-celery-down**: Removes the docker containers and volumes with the application dependencies.
-- make **docker-celery-logs**: View logs in the Celery worker and beat of the docker container.
+|Comando                        |Descrição                                                      |
+|-------------------------------|---------------------------------------------------------------|
+|docker-up-all                  |Inicia todos os containers docker.                             |
+|docker-down-all                |Remove todos os containers criados.                            |
+|docker-restart-all             |Reinicia todos os containers criados.                          |
+|docker-dependencies-up         |Cria os containers docker de dependências da aplicação.        |
+|docker-dependencies-down       |Remove os containers de dependências da aplicação.             |
+|docker-dependencies-downclear  |Remove os containers e os volumes de dependências da aplicação.|
+|docker-app-up                  |Cria os containers docker da aplicação rest.                   |
+|docker-app-down                |Remove os containers da aplicação rest.                        |
+|docker-app-logs                |Visualiza os logs dos containers da aplicação rest.            |
+|docker-app-migrate             |Aplicada as migrações no banco de dados.                       |
+|docker-app-superuser           |Cria o super usuário para acesso ao admin.                     |
+|docker-celery-run              |Cria os containers docker do Celery (_worker_ e _beat_).       |
+|docker-celery-down             |Remove os containers do Celery (_worker_ e _beat_).            |
+|docker-celery-logs             |Visualiza os logs dos containers do Celery (_worker_ e _beat_).|
 
 <a id="celery"></a>
-### Celery tasks and beat
-In this application it is possible to create tasks that can be executed from
-time to time or that can be executed when requested. All this logic is done
-using the [Celery](https://docs.celeryproject.org/en/stable) library.
+### Celery
+Nesse projeto é possível criar tarefas (_tasks_) que podem ser executadas de
+tempo em tempo ou quando solicitadas. Toda essa lógica é feita usando a
+biblioteca [Celery] (https://docs.celeryproject.org/en/stable).
 
-Its operation consists of two apps, being the worker and the beat.
-- The beat is just the application that from time to time calls a task to be
-  executed, according to the configuration defined in the settings. This
-  application is very lightweight and doesn't need to be scaled.
-- The worker is the application that receives the beat message or some internal
-  command of the rest application and starts processing the task according to
-  what is defined in it.
+Seu funcionamento consiste em dois aplicativos, sendo o _worker_ e o _beat_:
+- O _beat_ é apenas uma aplicação que de vez em quando chama uma _task_ para ser
+  executada, isso de acordo com a configuração definida em `core/settings/base.py`.
+- O _worker_ é o aplicativo que recebe a mensagem do _beat_ ou de algum comando
+  interno do aplicativo e começa a processar a tarefa de acordo com o que está
+  definido nele.
 
-Within each app we configure a file called _tasks.py_ and in that file we write
-the task code.
+Dentro de cada aplicativo, configuramos um arquivo chamado _tasks.py_ e nesse
+arquivo escrevemos o código da tarefa.
 
-In the section [Docker](#docker) you will find some commands to create
-containers for Celery application.
+Na seção [Docker](#docker) você encontrará alguns comandos para criar os
+containers docker do Celery.
+
+<a id="tests"></a>
+### Testes
+Para a criação de testes unitários o projeto utiliza o [pytest](https://pytest.org/).
+
+Dentro de cada _app_ que fica no diretório `src/project` existe uma pasta chamada _tests_.
+Cada arquivo python de teste tem seu nome começado com **test_** e cada função
+de teste começa com **test_**.
+
+Existe alguns comandos para você rodar os testes:
+
+|Comando                    |Descrição                                                                                                      |
+|---------------------------|---------------------------------------------------------------------------------------------------------------|
+|test                       |Irá rodar os testes unitários da aplicação.                                                                    |
+|test-coverage              |Irá rodar os testes unitários e medir a cobertura do testes.                                                   |
+|test-coverage-html-server  |Irá rodar os testes unitários, medir a cobertura, gerar uma página html estática e iniciará um servidor local .|
+
+<a id="logs"></a>
+### Logs
+Os logs do aplicativo são mais poderosos e menos dolorosos com a ajuda de
+**structlog** que é intermediado por `structlog`. Todos os logs feitos são
+convertidos para JSON, facilitando assim a análise e busca.
+
+Para utiliza-los basta seguir o código abaixo:
+```python
+import structlog
+logger = structlog.get_logger()
+
+logger.info("User logged in", user="test-user")
+```
+
+Todos os logs gerados utilizando o _structlog_ contém o Correlation-ID.
+Para mais detalhes sobre [Correlation-ID](#correlation_id) acesse a seção.
+
+<a id="correlation_id"></a>
+### Correlation ID
+Correlation ID é um código UUID que amarra todos os logs gerados pela aplicação,
+facilitando assim a busca de logs gerados em uma requisição, por exemplo.
+Este aplicativo faz uso do [django-cid](https://pypi.org/project/django-cid/)
+para fazer a gestão dos Correlation ID.
+
+Ele é injetado nos logs e retornado no cabeçalho de cada solicitação.
+O usuário pode também enviá-lo no cabeçalho da solicitação (X-Correlation-ID)
+ou se não for encontrado, o aplicativo irá gerar automaticamente.
 
 <a id="create_app"></a>
-### Create new app
-All new apps are created in the _src/apps_ directory and to create a new
-app you can run the following command:
+### Criando um novo aplicativo Django dentro do projeto
+Quando precisamos criar novas rotas ou novas tasks para a aplicação devemos
+criar um novo app Django.
+
+Todos os novos aplicativos são criados no diretório _src/project_ e para criar
+um novo aplicativo, você deve executar o seguinte comando:
 ```shell script
 make app name=clients
 ```
 
-Note that the _name_ parameter has been passed. It is used to inform the name
-of the application.
+Observe que o parâmetro _name_ foi passado. Ele é usado para informar o nome
+do novo aplicativo.
 
 <a id="app_versioning"></a>
-### Application code versioning
-A good practice it is always good to create a _changelog_ file in each
-completed task in order to keep a history of the change. For that we have some
-commands:
+### Changelog e versionamento do código
+Esse projeto está configurado para gerar um arquivo de _changelog_ toda vez que
+haver a nescessidade de gerar uma nova versão do projeto.
 
-- changelog-feature: signifying a new feature
-- changelog-bugfix: signifying a bug fix
-- changelog-doc: signifying a documentation improvement
-- changelog-removal: signifying a deprecation or removal of public API
+<a id="changelog"></a>
+#### Changelog
+Uma boa prática é sempre criar um arquivo _changelog_ em cada tarefa
+(pull/merge request) concluída a fim de manter um histórico da mudança.
+Para isso temos alguns comandos:
 
-Each of these commands expects the **filename** and **message** parameter. You
-can use them as follows:
+|Comando            |Descrição                                              |
+|-------------------|-------------------------------------------------------|
+|changelog-feature  |Significa um novo recurso.                             |
+|changelog-bugfix   |Significa a correção de um problema.                   |
+|changelog-doc      |Significa uma melhoria na documentação.                |
+|changelog-removal  |Significa uma suspensão ou remoção de uma rota de API. |
+
+Cada um desses comandos espera o parâmetro **filename** e **message**. Você
+pode usá-lo da seguinte forma:
 
 ```shell script
 make changelog-feature filename="create-crud-client" message="Adds CRUD for clients management"
 ```
 
-When a story is finished it is time to create a new version for the
-application. All _changelog_ files in existence will be converted to a single
-message that will be available in the _CHANGELOG_ file.
+Para mais detalhes sobre a criação desses arquivos de changelog você pode ver
+na [documentação](https://towncrier.readthedocs.io/en/actual-freaking-docs/)
+da biblioteca _towncrier_.
 
-There are three commands that we use to close the version. Are they:
+<a id="versioning"></a>
+#### Versionamento
+Quando uma história termina, é hora de criar uma nova versão do projeto.
+Todos os arquivos de _changelog_ existentes serão convertidos em uma única
+mensagem que ficará disponível no arquivo _CHANGELOG.md_.
 
-- release-patch: create patch release eg 0.0.1
-- release-minor: create minor release eg 0.1.0
-- release-major: create major release eg 1.0.0
+Existem três comandos que podemos usar para fechar uma versão. São eles:
 
-You can use them as follows:
+|Comando        |Descrição                              |
+|---------------|---------------------------------------|
+|release-patch  |Cria uma versão de patch. Ex.: 0.0.1   |
+|release-minor  |Cria uma versão de minor. Ex.: 0.1.0   |
+|release-major  |Cria uma versão de major. Ex.: 1.0.0   |
+
+Você pode usá-los da seguinte maneira:
 ```shell script
 make release-patch
 ```
 
-After running the specific command, two new commits will be created, one
-referring to the generation of the changelog file and the other referring to
-the generation of the new version of the application. In addition to these new
-commits, a specific tag for the application version is also generated.
+Depois de executar o comando específico, dois novos _commits_ serão criados, um
+referindo-se à geração do arquivo _changelog_ e o outro referindo-se a geração
+da nova versão do aplicativo. Além desses novos _commits_, uma tag específica
+para a versão do aplicativo também é gerada.
 
-Finally, you can submit all changes to your git repository with the `make push`
-command.
+Finalmente, você pode enviar todas as alterações para o seu repositório git
+com o comando `make push`.
+
+Para mais detalhes sobre o versionamento, você pode conferir a
+[documentação](https://github.com/c4urself/bump2version)
+oficial da biblioteca _bump2version_.
 
 <a id="migrate_migration"></a>
-### Migrate and migration
-If you've just set up your model, it's time to create the schema to be applied
-to the database in the future. Notice that in your app there is a folder with
-the name of **migrations**, this is where the schematics of your model will
-stay.
+### Migrate e migration
+Se você acabou de configurar seu modelo (model), é hora de criar o esquema a
+ser aplicado no banco de dados no futuro. Observe que em seu aplicativo há uma
+pasta com o nome de **migrations**, é aqui que fica o esquema do seu _model_.
+Para mais detalhes sobre esses comandos acesse a
+[documentação](https://docs.djangoproject.com/en/3.2/topics/migrations/) oficial.
 
-To create the schema we need to execute the following command:
+Para criar o esquema, precisamos executar o seguinte comando:
 ```shell script
 make migration
 ```
 
-You can also create a blank layout, which in turn will not be related to any
-model at first:
+Você também pode criar um layout em branco, que por sua vez não será relacionado
+a nenhum modelo em primeiro momento:
 ```shell script
 make migration-empty app=clients
 ```
 
-Note that the _app_ parameter has been passed. It is used to tell which app the
-schema should be created in.
+Observe que o parâmetro _app_ foi informado. Ele é usado para informar em qual
+aplicativo o _model_ deverá ser criado.
 
-Now we need to apply this schema to the database and for that we execute the
-following command:
+Agora precisamos aplicar este _model_ ao banco de dados e para isso executamos
+o seguinte comando:
 ```shell script
 make migrate
 ```
-
-<a id="logs"></a>
-### Logs
-The application logs are more powerful and less painful with the help of
-**structlog** which is intermediated by `structlog`. All logs made are
-converted to JSON, thus facilitating their search, since they are keyed.
-
-For you to use them just follow the code below:
-```python
-import structlog
-logger = structlog.get_logger(__name__)
-
-logger.info("User logged in", user="test-user")
-```
-
-<a id="correlation_id"></a>
-### Correlation ID
-This application uses [django-cid](https://pypi.org/project/django-cid/)
-to do the management.
-
-The correlation is injected into the logs and returned in the header of each
-request. The user can send it in the request header (X-Correlation-ID) or if it
-is not found, the application will automatically generate it.
