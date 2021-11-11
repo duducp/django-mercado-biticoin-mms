@@ -114,9 +114,9 @@ class TestRetrieveIndicatorMmsView:
         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
         assert data == {
             'detail': [
-                {'loc': ['query', 'filters', 'from'], 'msg': 'value is not a valid integer', 'type': 'type_error.integer'},  # noqa
-                {'loc': ['query', 'filters', 'to'], 'msg': 'value is not a valid integer', 'type': 'type_error.integer'},  # noqa
-                {'loc': ['query', 'filters', 'range'], 'msg': 'value is not a valid enumeration member; permitted: 20, 50, 200', 'type': 'type_error.enum', 'ctx': {'enum_values': [20, 50, 200]}}  # noqa
+                {'loc': ['query', 'from'], 'msg': 'value is not a valid integer', 'type': 'type_error.integer'},  # noqa
+                {'loc': ['query', 'to'], 'msg': 'value is not a valid integer', 'type': 'type_error.integer'},  # noqa
+                {'loc': ['query', 'range'], 'msg': 'value is not a valid enumeration member; permitted: 20, 50, 200', 'type': 'type_error.enum', 'ctx': {'enum_values': [20, 50, 200]}}  # noqa
             ]
         }
 
@@ -131,8 +131,8 @@ class TestRetrieveIndicatorMmsView:
         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
         assert data == {
             'detail': [
-                {'loc': ['query', 'filters', 'from'], 'msg': 'field required', 'type': 'value_error.missing'},  # noqa
-                {'loc': ['query', 'filters', 'range'], 'msg': 'field required', 'type': 'value_error.missing'}  # noqa
+                {'loc': ['query', 'from'], 'msg': 'field required', 'type': 'value_error.missing'},  # noqa
+                {'loc': ['query', 'range'], 'msg': 'field required', 'type': 'value_error.missing'}  # noqa
             ]
         }
 
@@ -169,6 +169,6 @@ class TestRetrieveIndicatorMmsView:
         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
         assert data == {
             'detail': [
-                {'loc': ['query', 'filters', 'from'], 'msg': 'Start date cannot be longer than 365 days', 'type': 'value_error'}  # noqa
+                {'loc': ['query', 'from'], 'msg': 'Start date cannot be longer than 365 days', 'type': 'value_error'}  # noqa
             ]
         }

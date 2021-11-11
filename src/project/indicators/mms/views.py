@@ -2,6 +2,7 @@ from http import HTTPStatus
 from typing import List
 
 from django.core.cache import cache
+
 from ninja import Query, Router
 from simple_settings import settings
 
