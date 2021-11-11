@@ -7,9 +7,9 @@ média móvel simples das moedas sendo isso feito por workers desenvolvidos
 utilizando o Celery.
 
 Principais dependências:
-- Django
-- Django Ninja
-- Celery
+- [Django](https://www.djangoproject.com/)
+- [Django Ninja](https://django-ninja.rest-framework.com/) (async)
+- [Celery](https://docs.celeryproject.org/en/stable/getting-started/introduction.html)
 
 Compatibilidade:
 - Python 3.9.5
@@ -34,6 +34,7 @@ Compatibilidade:
   - [Changelog](#changelog)
   - [Versionamento](#versioning)
 - [Migrate e migration](#migrate_migration)
+- [Commits](#commits)
 
 <a id="about"></a>
 ### Sobre o projeto
@@ -260,9 +261,9 @@ tempo em tempo ou quando solicitadas. Toda essa lógica é feita usando a
 biblioteca [Celery] (https://docs.celeryproject.org/en/stable).
 
 Seu funcionamento consiste em dois aplicativos, sendo o _worker_ e o _beat_:
-- O _beat_ é apenas uma aplicação que de vez em quando chama uma _task_ para ser
+- O [_beat_](#about_beat) é apenas uma aplicação que de vez em quando chama uma _task_ para ser
   executada, isso de acordo com a configuração definida em `core/settings/base.py`.
-- O _worker_ é o aplicativo que recebe a mensagem do _beat_ ou de algum comando
+- O [_worker_](#about_worker) é o aplicativo que recebe a mensagem do _beat_ ou de algum comando
   interno do aplicativo e começa a processar a tarefa de acordo com o que está
   definido nele.
 
@@ -341,12 +342,13 @@ Uma boa prática é sempre criar um arquivo _changelog_ em cada tarefa
 (pull/merge request) concluída a fim de manter um histórico da mudança.
 Para isso temos alguns comandos:
 
-|Comando            |Descrição                                              |
-|-------------------|-------------------------------------------------------|
-|changelog-feature  |Significa um novo recurso.                             |
-|changelog-bugfix   |Significa a correção de um problema.                   |
-|changelog-doc      |Significa uma melhoria na documentação.                |
-|changelog-removal  |Significa uma suspensão ou remoção de uma rota de API. |
+|Comando                |Descrição                                              |
+|-----------------------|-------------------------------------------------------|
+|changelog-feature      |Significa um novo recurso.                             |
+|changelog-improvement  |Significa que uma melhoria foi implementada no projeto.|
+|changelog-bugfix       |Significa uma correção de um problema.                 |
+|changelog-doc          |Significa uma melhoria na documentação.                |
+|changelog-removal      |Significa uma suspensão ou remoção de uma rota de API. |
 
 Cada um desses comandos espera o parâmetro **filename** e **message**. Você
 pode usá-lo da seguinte forma:
@@ -417,3 +419,56 @@ o seguinte comando:
 ```shell script
 make migrate
 ```
+
+<a id="commits"></a>
+### Commits
+Ao criar o commit, é comum apenas falar o que foi feito ou o que está sendo feito, utilizando para isso verbos no
+passado ou no gerúndio:
+```
+Fixed bug with Y
+Changing behavior of X
+Refatorou classe de autenticação
+Atualizando biblioteca xpto
+```
+
+Escrever desse modo pode parecer mais natural na hora de compor a mensagem do commit, mas isso pode dificultar a leitura
+do histórico de commits de um projeto.
+
+Ao fazer commits em inglês, escreva o título no modo imperativo:
+```
+Refactor subsystem X for readability
+Update getting started documentation
+Remove deprecated methods
+Release version 1.0.0
+```
+
+Isso vai de acordo com o padrão que o próprio Git segue quando gera uma mensagens de commit automaticamente em casos
+como no `git merge`:
+```
+Merge branch 'myfeature'
+```
+
+Ou como no git revert:
+```
+Revert "Add the thing with the stuff"
+
+This reverts commit cc87791524aedd593cff5a74532befe7ab69ce9d.
+```
+
+Uma dica ao fazer mensagens de commit em inglês, é que um bom título sempre deve completar a frase:
+_if applied, this commit will_. Por exemplo:
+```
+if applied, this commit will refactor subsystem X for readability
+if applied, this commit will update getting started documentation
+if applied, this commit will remove deprecated methods
+if applied, this commit will release version 1.0.0
+```
+
+Já quando for escrever a mensagem do commit em português conjugue o verbo no presente do indicativo, utilizando a terceira pessoa do singular:
+```
+Refatora sistema X para melhorar legibilidade
+Atualiza documentação de instalação do projeto
+Remove métodos obsoletos
+```
+
+O conteúdo acima foi retirado do site [Ruan Brandão](https://ruanbrandao.com.br/2020/02/04/como-fazer-um-bom-commit/).

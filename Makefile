@@ -1,5 +1,6 @@
 PROJECT_PATH=./src/project
 FILE_ENV=.env-development
+BRANCH_NAME=$(shell git rev-parse --abbrev-ref HEAD)
 
 export PYTHONPATH=src
 
@@ -205,38 +206,44 @@ test-coverage-html-server: test-coverage-html ## Run tests with coverage and ope
 	cd htmlcov && python -m http.server 8001 --bind 0.0.0.0
 
 
+changelog-improvement: ## Create changelog file for code improvements
+	@echo $(message) > changelog/${BRANCH_NAME}.improvement
+
 changelog-feature: ## Creates changelog file for new feature
-	@echo $(message) > changelog/$(filename).feature
+	@echo $(message) > changelog/${BRANCH_NAME}.feature
 
 changelog-bugfix: ## Creates changelog file for bug fix
-	@echo $(message) > changelog/$(filename).bugfix
+	@echo $(message) > changelog/${BRANCH_NAME}.bugfix
 
 changelog-doc: ## Creates changelog file for documentation improvement
-	@echo $(message) > changelog/$(filename).doc
+	@echo $(message) > changelog/${BRANCH_NAME}.doc
 
 changelog-removal: ## Creates changelog file for deprecation or removal of public API
-	@echo $(message) > changelog/$(filename).removal
+	@echo $(message) > changelog/${BRANCH_NAME}.removal
 
 changelog-misc: ## Creates a changelog file where the changes are not of interest to the end user
-	@echo $(message) > changelog/$(filename).misc
+	@echo $(message) > changelog/${BRANCH_NAME}.misc
 
 release-patch: ## Creates patch release (0.0.1)
 	bumpversion patch --dry-run --no-tag --no-commit --list | grep new_version= | sed -e 's/new_version=//' | xargs -n 1 towncrier --yes --version
 	git commit -am 'Update CHANGELOG'
 	bumpversion patch
-	@echo 'To send the changes to the remote server run the make push command'
+	@echo 'New commit and new tag created.'
+	@echo 'Run "make push" to send them to github.'
 
 release-minor: ## Creates minor release (0.1.0)
 	bumpversion minor --dry-run --no-tag --no-commit --list | grep new_version= | sed -e 's/new_version=//' | xargs -n 1 towncrier --yes --version
 	git commit -am 'Update CHANGELOG'
 	bumpversion minor
-	@echo 'To send the changes to the remote server run the make push command'
+	@echo 'New commit and new tag created.'
+	@echo 'Run "make push" to send them to github.'
 
 release-major: ## Creates major release (1.0.0)
 	bumpversion major --dry-run --no-tag --no-commit --list | grep new_version= | sed -e 's/new_version=//' | xargs -n 1 towncrier --yes --version
 	git commit -am 'Update CHANGELOG'
 	bumpversion major
-	@echo 'To send the changes to the remote server run the make push command'
+	@echo 'New commit and new tag created.'
+	@echo 'Run "make push" to send them to github.'
 
 push: ## Push commits and tags to the remote Git repository
 	git push && git push --tags
