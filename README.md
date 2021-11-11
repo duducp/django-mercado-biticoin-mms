@@ -12,8 +12,8 @@ Principais dependências:
 - [Celery](https://docs.celeryproject.org/en/stable/getting-started/introduction.html)
 
 Compatibilidade:
-- Python 3.9.5
-- Django 3.2.4
+- Python 3.10.1
+- Django 3.2.10
 
 ## Índice
 - [Sobre o projeto](#about)
@@ -201,6 +201,9 @@ export ALLOWED_HOSTS="*;"
 Se esta é a primeira vez que executa o aplicativo em um banco de dados de
 produção, você deve aplicar a migração e criar o super usuário.
 
+Como opcional você pode desativar o Django Admin setando a variável **ADMIN_ENABLED** como **false**. Caso queira
+desativar a documentação você deve setar **docs_url** igual a **None** no NinjaAPI em **project.urls**.
+
 Consulte o arquivo `core/settings/base.py` para ver todas as variáveis de ambiente disponíveis.
 
 <a id="initial_charge"></a>
@@ -350,11 +353,10 @@ Para isso temos alguns comandos:
 |changelog-doc          |Significa uma melhoria na documentação.                |
 |changelog-removal      |Significa uma suspensão ou remoção de uma rota de API. |
 
-Cada um desses comandos espera o parâmetro **filename** e **message**. Você
-pode usá-lo da seguinte forma:
+Cada um desses comandos espera o parâmetro **message**. Você pode usá-lo da seguinte forma:
 
 ```shell script
-make changelog-feature filename="create-crud-client" message="Adds CRUD for clients management"
+make changelog-feature message="Adds CRUD for clients management"
 ```
 
 Para mais detalhes sobre a criação desses arquivos de changelog você pode ver
