@@ -1,5 +1,6 @@
 import uuid
 
+from django.core.validators import RegexValidator
 from django.db import models
 
 
@@ -33,3 +34,19 @@ class UpperCaseCharField(models.CharField):
                 model_instance,
                 add
             )
+
+
+class Validators:
+    @property
+    def only_numbers(self):
+        return RegexValidator(
+            regex=r'^[0-9]*$',
+            message='This field must contain only numbers.'
+        )
+
+    @property
+    def only_letters_and_space(self):
+        return RegexValidator(
+            regex=r'^[a-z A-Z]*$',
+            message='This field must contain only letters and spaces.'
+        )

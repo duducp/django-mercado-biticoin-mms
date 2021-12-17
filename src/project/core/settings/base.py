@@ -41,8 +41,9 @@ STATIC_URL = '/statics/'
 
 ADMIN_URL = 'admin/'
 ADMIN_ENABLED = strtobool(os.getenv('ADMIN_ENABLED', 'true'))
-ADMIN_SITE_HEADER = 'Django Administration'
-ADMIN_SITE_TITLE = 'Mercado Bitcoin'
+ADMIN_SITE_HEADER = 'Painel de Controle - Play nas Férias'
+ADMIN_INDEX_TITLE = 'Administração'
+ADMIN_SITE_TITLE = 'Play nas Férias'
 
 LOGIN_URL = reverse_lazy('admin:login')
 LOGOUT_URL = reverse_lazy('admin:logout')
@@ -74,6 +75,7 @@ TEMPLATES = [
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.media',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -92,6 +94,8 @@ DEFAULT_APPS = [
     'django.contrib.staticfiles',
 ]
 if ADMIN_ENABLED:
+    DEFAULT_APPS.append('admin_interface')
+    DEFAULT_APPS.append('colorfield')
     DEFAULT_APPS.append('django.contrib.admin')
 
 THIRD_PARTY_APPS = [
@@ -104,9 +108,13 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     'project.ping.apps.PingConfig',
     'project.indicators.mms.apps.MmsConfig',
+    'project.tickets.apps.TicketsConfig',
 ]
 
 INSTALLED_APPS = DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+SILENCED_SYSTEM_CHECKS = ['security.W019']
 
 # Django middlewares settings
 DEFAULT_MIDDLEWARE = [
@@ -142,7 +150,7 @@ CACHES = {
         'KEY_PREFIX': 'default',
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
+            # 'SERIALIZER': 'django_redis.serializers.json.JSONSerializer',
             'CONNECTION_POOL_KWARGS': {
                 'retry_on_timeout': True
             }

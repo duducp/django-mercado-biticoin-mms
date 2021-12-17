@@ -66,7 +66,7 @@ migrate: migration ## Apply migrations to the database
 migration: ## Creates migration file according to the models
 	python src/manage.py makemigrations
 
-migration-empty: ## Creates blank migration file
+migration-empty: ## Creates blank migration file. Ex.: make migration-empty app=user
 	python src/manage.py makemigrations --empty $(app)
 
 migration-detect: ## Detect missing migrations
