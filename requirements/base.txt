@@ -5,6 +5,7 @@ dj-database-url==0.5.0
 Django==3.2.10
 django-celery-beat==2.2.1
 django-cid==2.2
+django-cors-headers==3.10.1
 django-dbconn-retry==0.1.5
 django-extensions==3.1.5
 django-ninja==0.16.1

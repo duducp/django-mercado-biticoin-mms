@@ -32,13 +32,13 @@ class TicketAdmin(admin.ModelAdmin):
         'validate_ticket',
     ]
 
-    def get_queryset(self, request):
-        if request.GET or request.POST:
-            filter_q = request.GET.get('q')
-            if filter_q != '':
-                return super(TicketAdmin, self).get_queryset(request)
-
-        return self.model.objects.none()
+    # def get_queryset(self, request):
+    #     if request.GET or request.POST:
+    #         filter_q = request.GET.get('q')
+    #         if filter_q != '':
+    #             return super(TicketAdmin, self).get_queryset(request)
+    #
+    #     return self.model.objects.none()
 
     def get_actions(self, request):
         actions = super(TicketAdmin, self).get_actions(request)

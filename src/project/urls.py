@@ -38,7 +38,7 @@ api_party = NinjaAPI(
     title='Party - Mercado Bitcoin',
     description='',
     renderer=RendererDefault(),
-    csrf=True,
+    csrf=False,
 )
 api_party.add_router('tickets/', tickets_router),
 
