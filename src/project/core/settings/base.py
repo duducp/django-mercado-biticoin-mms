@@ -94,8 +94,6 @@ DEFAULT_APPS = [
     'django.contrib.staticfiles',
 ]
 if ADMIN_ENABLED:
-    DEFAULT_APPS.append('admin_interface')
-    DEFAULT_APPS.append('colorfield')
     DEFAULT_APPS.append('django.contrib.admin')
 
 THIRD_PARTY_APPS = [
@@ -112,9 +110,6 @@ LOCAL_APPS = [
 ]
 
 INSTALLED_APPS = DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
-
-X_FRAME_OPTIONS = 'SAMEORIGIN'
-SILENCED_SYSTEM_CHECKS = ['security.W019']
 
 # Django middlewares settings
 DEFAULT_MIDDLEWARE = [

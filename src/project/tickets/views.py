@@ -2,10 +2,20 @@
 # https://django-ninja.rest-framework.com/tutorial
 
 from http import HTTPStatus
+from typing import List
 
-from ninja import Router
+from django.db.models import Q
 
-from project.tickets.schemas import TicketsInSchema, TicketsOutSchema
+from ninja import Query, Router
+from ninja.errors import HttpError
+
+from project.core.exceptions import InternalServerError, NotFoundError
+from project.tickets.models import Tickets
+from project.tickets.schemas import (
+    QueryFilter,
+    TicketsInSchema,
+    TicketsOutSchema
+)
 
 router = Router(tags=['tickets'])
 
@@ -15,24 +25,59 @@ router = Router(tags=['tickets'])
     summary='Tickets',
     description='',
     response={
-        HTTPStatus.OK: TicketsOutSchema,
+        HTTPStatus.OK: List[TicketsOutSchema],
     }
 )
-async def retrieve_tickets(request, text: str = 'world'):
-    data = {
-        'message': f'Hello {text}'
-    }
+def retrieve_tickets(request, filters: QueryFilter = Query(None)):
+    try:
+        filters = filters.dict()
+        value = filters['value']
 
-    return HTTPStatus.OK, data
+        if not value:
+            tickets = Tickets.objects.order_by('name').all()
+        else:
+            value = str(value).upper()
+            tickets = Tickets.objects.filter(
+                Q(cpf=value) |
+                Q(name__contains=value)
+            ).order_by('name').all()
+
+        return HTTPStatus.OK, tickets
+    except Exception:
+        raise InternalServerError(
+            'An internal error occurred while making the request.'
+        )
 
 
-@router.post(
+@router.put(
     path='/',
     summary='Tickets',
     description='',
     response={
-        HTTPStatus.OK: TicketsOutSchema,
+        HTTPStatus.OK: TicketsInSchema,
     }
 )
-async def create_tickets(request, payload: TicketsInSchema):
-    return HTTPStatus.OK, payload.dict()
+def update_tickets(request, payload: TicketsInSchema):
+    try:
+        payload = payload.dict()
+
+        ticket = Tickets.objects.get(id=payload['id'])
+
+        if ticket.validated:
+            raise HttpError(HTTPStatus.BAD_REQUEST, 'ID validated')
+
+        ticket.validated = True
+        ticket.save()
+
+        return HTTPStatus.OK, {'id': ticket.id}
+
+    except HttpError:
+        raise
+
+    except Tickets.DoesNotExist:
+        raise NotFoundError('Id not found')
+
+    except Exception:
+        raise InternalServerError(
+            'An internal error occurred while making the request.'
+        )
