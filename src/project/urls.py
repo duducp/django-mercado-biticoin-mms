@@ -32,12 +32,21 @@ api_v1 = NinjaAPI(
     renderer=RendererDefault()
 )
 api_v1.add_router('indicators/', indicators_router),
-api_v1.add_router('tickets/', tickets_router),
+
+api_party = NinjaAPI(
+    version='2.0.0',
+    title='Party - Mercado Bitcoin',
+    description='',
+    renderer=RendererDefault(),
+    csrf=True,
+)
+api_party.add_router('tickets/', tickets_router),
 
 # Declared routes
 urlpatterns = [
     path('', api.urls),
     path('v1/', api_v1.urls),
+    path('party/', api_party.urls),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.ADMIN_ENABLED:

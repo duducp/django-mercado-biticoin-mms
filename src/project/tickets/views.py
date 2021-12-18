@@ -4,10 +4,12 @@
 from http import HTTPStatus
 from typing import List
 
+from django.contrib.auth import authenticate
 from django.db.models import Q
 
 from ninja import Query, Router
 from ninja.errors import HttpError
+from ninja.security import HttpBasicAuth
 
 from project.core.exceptions import InternalServerError, NotFoundError
 from project.tickets.models import Tickets
@@ -18,6 +20,11 @@ from project.tickets.schemas import (
 )
 
 router = Router(tags=['tickets'])
+
+
+class BasicAuth(HttpBasicAuth):
+    def authenticate(self, request, username, password):
+        return authenticate(username=username, password=password)
 
 
 @router.get(
@@ -55,10 +62,16 @@ def retrieve_tickets(request, filters: QueryFilter = Query(None)):
     description='',
     response={
         HTTPStatus.OK: TicketsInSchema,
-    }
+    },
+    auth=BasicAuth()
 )
 def update_tickets(request, payload: TicketsInSchema):
     try:
+        if not request.user.has_perm('tickets.validate_ticket'):
+            raise HttpError(
+                HTTPStatus.FORBIDDEN, 'No permission to validate ticket'
+            )
+
         payload = payload.dict()
 
         ticket = Tickets.objects.get(id=payload['id'])
