@@ -8,11 +8,11 @@ import pytest
 from celery.exceptions import MaxRetriesExceededError, Retry
 from freezegun import freeze_time
 
-from project.core.locks import LockActiveError
-from project.indicators.mms.tasks import (
+from project.apps.indicators.mms.tasks import (
     task_beat_select_pairs_to_mms,
     task_calculate_simple_moving_average
 )
+from project.core.locks import LockActiveError
 from project.services.candles.schemas import CandleSchema
 
 
@@ -35,7 +35,7 @@ class TestTaskCalculateSimpleMovingAverage:
     @pytest.fixture()
     def mock_get_candles(self, mock_return_get_candles):
         with asynctest.patch(
-            'project.indicators.mms.tasks.'
+            'project.apps.indicators.mms.tasks.'
             'calculate_simple_moving_average_by_candles'
         ) as mock_get_candles:
             mock_get_candles.return_value = mock_return_get_candles
@@ -43,12 +43,14 @@ class TestTaskCalculateSimpleMovingAverage:
 
     @pytest.fixture()
     def mock_logger(self):
-        with mock.patch('project.indicators.mms.tasks.logger') as mock_logger:
+        with mock.patch(
+            'project.apps.indicators.mms.tasks.logger'
+        ) as mock_logger:
             yield mock_logger
 
     @pytest.fixture
     def mock_cache_lock(self):
-        with mock.patch('project.indicators.mms.tasks.CacheLock') as lock:
+        with mock.patch('project.apps.indicators.mms.tasks.CacheLock') as lock:
             yield lock
 
     def test_should_validate_if_a_task_was_successfully_executed(
@@ -122,7 +124,7 @@ class TestTaskCalculateSimpleMovingAverage:
         ])
 
     @mock.patch(
-        'project.indicators.mms.tasks.'
+        'project.apps.indicators.mms.tasks.'
         'task_calculate_simple_moving_average.retry'
     )
     @freeze_time('2021-6-6 23:00')
@@ -191,23 +193,25 @@ class TestTaskBeatSelectPairsToMms:
 
     @pytest.fixture
     def mock_cache_lock(self):
-        with mock.patch('project.indicators.mms.tasks.CacheLock') as lock:
+        with mock.patch('project.apps.indicators.mms.tasks.CacheLock') as lock:
             yield lock
 
     @pytest.fixture()
     def mock_logger(self):
-        with mock.patch('project.indicators.mms.tasks.logger') as mock_logger:
+        with mock.patch(
+            'project.apps.indicators.mms.tasks.logger'
+        ) as mock_logger:
             yield mock_logger
 
     @pytest.fixture
     def mock_task_calculate(self):
         with mock.patch(
-            'project.indicators.mms.tasks.task_calculate_simple_moving_average'
+            'project.apps.indicators.mms.tasks.task_calculate_simple_moving_average'  # noqa
         ) as task_mock:
             yield task_mock
 
     @freeze_time('2021-6-6 15:00')
-    @mock.patch('project.indicators.mms.tasks.random')
+    @mock.patch('project.apps.indicators.mms.tasks.random')
     def test_should_validate_if_a_task_was_successfully_executed(
         self,
         mock_random,
@@ -241,7 +245,7 @@ class TestTaskBeatSelectPairsToMms:
         mock_task_calculate.assert_not_called()
 
     @mock.patch(
-        'project.indicators.mms.tasks.task_beat_select_pairs_to_mms.retry'
+        'project.apps.indicators.mms.tasks.task_beat_select_pairs_to_mms.retry'
     )
     @freeze_time('2021-6-6 15:00')
     def test_should_validate_the_retry_when_an_exception_occurs(
@@ -267,7 +271,7 @@ class TestTaskBeatSelectPairsToMms:
         )
 
     @mock.patch(
-        'project.indicators.mms.tasks.task_beat_select_pairs_to_mms.retry'
+        'project.apps.indicators.mms.tasks.task_beat_select_pairs_to_mms.retry'
     )
     @freeze_time('2021-6-6 15:00')
     def test_should_validate_when_it_exceeds_the_maximum_retries(

@@ -2,5 +2,5 @@ from django.apps import AppConfig
 
 
 class MmsConfig(AppConfig):
-    name = 'project.indicators.mms'
+    name = 'project.apps.indicators.mms'
     verbose_name = 'Simple Moving Average'

@@ -4,11 +4,13 @@ import pytest
 from asgiref.sync import sync_to_async
 from asynctest import patch
 
-from project.indicators.mms.exceptions import CalculateMmsCountCandlesException
-from project.indicators.mms.helpers import (
+from project.apps.indicators.mms.exceptions import (
+    CalculateMmsCountCandlesException
+)
+from project.apps.indicators.mms.helpers import (
     calculate_simple_moving_average_by_candles
 )
-from project.indicators.mms.models import SimpleMovingAverage
+from project.apps.indicators.mms.models import SimpleMovingAverage
 from project.services.candles.schemas import CandleSchema
 
 
@@ -31,7 +33,7 @@ class TestCalculateSimpleMovingAverageByCandles:
     @pytest.fixture()
     def mock_get_candles(self, mock_return_get_candles):
         with patch(
-            'project.indicators.mms.helpers.get_candles'
+            'project.apps.indicators.mms.helpers.get_candles'
         ) as mock_get_candles:
             mock_get_candles.return_value = mock_return_get_candles
             yield mock_get_candles

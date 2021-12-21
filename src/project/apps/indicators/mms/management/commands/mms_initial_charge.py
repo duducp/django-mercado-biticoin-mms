@@ -5,9 +5,11 @@ from django.utils import timezone
 
 import structlog
 
-from project.indicators.enum import PairEnum
-from project.indicators.mms.models import SimpleMovingAverage
-from project.indicators.mms.tasks import task_calculate_simple_moving_average
+from project.apps.indicators.enum import PairEnum
+from project.apps.indicators.mms.models import SimpleMovingAverage
+from project.apps.indicators.mms.tasks import (
+    task_calculate_simple_moving_average
+)
 
 logger = structlog.get_logger()
 

@@ -6,12 +6,12 @@ from django.utils import timezone
 
 import structlog
 
-from project.core.celery import app
-from project.core.locks import CacheLock, LockActiveError
-from project.indicators.enum import PairEnum
-from project.indicators.mms.helpers import (
+from project.apps.indicators.enum import PairEnum
+from project.apps.indicators.mms.helpers import (
     calculate_simple_moving_average_by_candles
 )
+from project.core.celery import app
+from project.core.locks import CacheLock, LockActiveError
 
 logger = structlog.get_logger()
 

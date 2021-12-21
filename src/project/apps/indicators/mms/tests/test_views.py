@@ -25,7 +25,7 @@ class TestRetrieveIndicatorMmsView:
     @pytest.fixture
     def mock_cache(self):
         with patch(
-            'project.indicators.mms.views.cache'
+            'project.apps.indicators.mms.views.cache'
         ) as mock_cache:
             yield mock_cache
 
@@ -69,7 +69,7 @@ class TestRetrieveIndicatorMmsView:
         )
 
     @patch(
-        'project.indicators.mms.views.get_simple_moving_average_variations',
+        'project.apps.indicators.mms.views.get_simple_moving_average_variations',  # noqa
         side_effect=Exception
     )
     def test_should_validate_status_code_and_body_when_an_exception_occurs(

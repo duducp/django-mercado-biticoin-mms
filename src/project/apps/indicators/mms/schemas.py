@@ -6,7 +6,7 @@ from django.utils import timezone
 from ninja import Schema
 from pydantic import Field, validator
 
-from project.indicators.mms.enum import RangeDaysEnum
+from project.apps.indicators.mms.enum import RangeDaysEnum
 
 
 class QueryFilter(Schema):

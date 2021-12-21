@@ -8,7 +8,7 @@ import pytest
 from freezegun import freeze_time
 from model_bakery import baker
 
-from project.indicators.mms.models import SimpleMovingAverage
+from project.apps.indicators.mms.models import SimpleMovingAverage
 
 
 @pytest.mark.django_db
@@ -17,7 +17,7 @@ class TestCommandMmsInitialCharge:
     @pytest.fixture()
     def mock_logger(self):
         with mock.patch(
-            'project.indicators.mms.management.commands.'
+            'project.apps.indicators.mms.management.commands.'
             'mms_initial_charge.logger'
         ) as mock_logger:
             yield mock_logger
@@ -25,7 +25,7 @@ class TestCommandMmsInitialCharge:
     @pytest.fixture
     def mock_task_calculate_simple_moving_average(self):
         with mock.patch(
-            'project.indicators.mms.management.commands.'
+            'project.apps.indicators.mms.management.commands.'
             'mms_initial_charge.task_calculate_simple_moving_average'
         ) as task_mock:
             yield task_mock

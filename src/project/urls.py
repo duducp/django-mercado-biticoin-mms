@@ -5,10 +5,10 @@ from django.urls import path
 from ninja import NinjaAPI
 from simple_settings import settings
 
+from project.apps.indicators.urls import router as indicators_router
+from project.apps.ping.views import router as ping_router
 from project.core.handlers import custom_handler_404, custom_handler_500
 from project.core.renderers import RendererDefault
-from project.indicators.urls import router as indicators_router
-from project.ping.views import router as ping_router
 
 # Handler Errors
 handler404 = custom_handler_404
@@ -42,6 +42,7 @@ urlpatterns = [
 if settings.ADMIN_ENABLED:
     admin.site.site_header = settings.ADMIN_SITE_HEADER
     admin.site.site_title = settings.ADMIN_SITE_TITLE
+    admin.site.index_title = settings.ADMIN_INDEX_TITLE
 
     urlpatterns += i18n_patterns(
         path(settings.ADMIN_URL, admin.site.urls),

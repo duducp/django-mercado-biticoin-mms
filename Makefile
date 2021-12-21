@@ -1,4 +1,5 @@
 PROJECT_PATH=./src/project
+PROJECT_APPS_PATH=./src/project/apps
 FILE_ENV=.env-development
 BRANCH_NAME=$(shell git rev-parse --abbrev-ref HEAD)
 
@@ -18,7 +19,7 @@ define SET_ENV_DOCKER_APP
 	REDIS_URL_LOCK=redis://redis:6379/1
 endef
 
-help: ## This help
+help:
 	@echo 'To see the available Django commands, run the following command "make manage".'
 	@echo 'For more information read the project Readme.'
 	@echo
@@ -33,8 +34,10 @@ clean: ## Clean local environment
 	@find . -name "*.pyc" | xargs rm -rf
 	@find . -name "*.pyo" | xargs rm -rf
 	@find . -name "__pycache__" -type d | xargs rm -rf
+	@find . -name "__MACOSX" -type d | xargs rm -rf
 	@rm -f .coverage
 	@rm -rf htmlcov/
+	@rm -rf .pytest_cache/
 	@rm -f coverage.xml
 	@rm -f *.log
 
@@ -47,10 +50,10 @@ pre-commit: ## Configure pre-commit to keep the code organized when committing a
 collectstatic: ## Creates static files for admin
 	python src/manage.py collectstatic --noinput #--clear
 
-app:  ## Creates a new django application Ex.: make app name=products
-	cd $(PROJECT_PATH) && python ../manage.py startapp --template=../../.template/app_name.zip -e py -e md $(name)
-	@echo 'Application created in "$(PROJECT_PATH)/$(name)"'
-	@echo 'Read the README for more details: $(PROJECT_PATH)/$(name)/Readme.md'
+app: clean  ## Creates a new django application Ex.: make app name=products
+	cd $(PROJECT_APPS_PATH) && python ../../manage.py startapp --template=../../../.template/app_name.zip -e py -e md $(name)
+	@echo 'Application created in "$(PROJECT_APPS_PATH)/$(name)"'
+	@echo 'Read the README for more details: $(PROJECT_APPS_PATH)/$(name)/Readme.md'
 
 run: collectstatic  ## Run the django project
 	-$(MAKE) docker-dependencies-up

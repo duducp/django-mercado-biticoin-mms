@@ -6,7 +6,7 @@ from django.utils import timezone
 from ninja import Router
 from simple_settings import settings
 
-from project.ping.schemas import PingOutSchema
+from project.apps.ping.schemas import PingOutSchema
 
 router = Router()
 

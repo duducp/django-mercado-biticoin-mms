@@ -6,11 +6,11 @@ from django.core.cache import cache
 from ninja import Query, Router
 from simple_settings import settings
 
-from project.core.exceptions import InternalServerError
-from project.indicators.mms.schemas import (
+from project.apps.indicators.mms.schemas import (
     IndicatorMmsResponseSchema,
     QueryFilter
 )
+from project.core.exceptions import InternalServerError
 
 from .helpers import get_simple_moving_average_variations
 

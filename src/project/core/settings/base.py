@@ -32,17 +32,20 @@ VERSION = __version__
 APP_NAME = 'mb-mms-api'
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-LOCALE_PATHS = [os.path.join(CORE_DIR, 'locales')]
-STATICFILES_DIRS = [os.path.join(CORE_DIR, 'statics')]
-MEDIA_ROOT = os.path.join(BASE_DIR, 'medias')
-MEDIA_URL = '/medias/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATIC_URL = '/statics/'
 
+LOCALE_PATHS = [os.path.join(CORE_DIR, 'locales')]
+MEDIA_ROOT = os.path.join(CORE_DIR, 'medias')
+STATICFILES_DIRS = [os.path.join(CORE_DIR, 'statics')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATIC_URL = 'statics/'
+MEDIA_URL = 'medias/'
 ADMIN_URL = 'admin/'
+
 ADMIN_ENABLED = strtobool(os.getenv('ADMIN_ENABLED', 'true'))
 ADMIN_SITE_HEADER = 'Django Administration'
 ADMIN_SITE_TITLE = 'Mercado Bitcoin'
+ADMIN_INDEX_TITLE = 'Administration'
 
 LOGIN_URL = reverse_lazy('admin:login')
 LOGOUT_URL = reverse_lazy('admin:logout')
@@ -73,11 +76,12 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            os.path.join(CORE_DIR, 'templates'),
+            os.path.join(PROJECT_DIR, 'templates'),
         ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.media',
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
@@ -107,8 +111,8 @@ THIRD_PARTY_APPS = [
 ]
 
 LOCAL_APPS = [
-    'project.ping.apps.PingConfig',
-    'project.indicators.mms.apps.MmsConfig',
+    'project.apps.ping.apps.PingConfig',
+    'project.apps.indicators.mms.apps.MmsConfig',
 ]
 
 INSTALLED_APPS = DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -230,7 +234,7 @@ LOGGING = {
         },
         'ignore_if_contains': {
             '()': 'project.core.logging.filters.IgnoreIfContains',
-            'substrings': ['/ping'],
+            'substrings': ['/ping', 'openapi.json'],
         },
     },
     'formatters': {
@@ -326,7 +330,7 @@ CELERY_TASK_QUEUES = (
 CELERY_BEAT_SCHEDULE = {
     'indicator-mms-select-pairs': {
         'task': (
-            'project.indicators.mms.tasks.task_beat_select_pairs_to_mms'
+            'project.apps.indicators.mms.tasks.task_beat_select_pairs_to_mms'
         ),
         'schedule': crontab(
             hour=os.getenv('CELERY_BEAT_HOUR_SELECT_PAIRS_TO_MMS', '*/1')

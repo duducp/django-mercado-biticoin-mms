@@ -5,8 +5,10 @@ from django.db.models import QuerySet
 
 from asgiref.sync import sync_to_async
 
-from project.indicators.mms.exceptions import CalculateMmsCountCandlesException
-from project.indicators.mms.models import SimpleMovingAverage
+from project.apps.indicators.mms.exceptions import (
+    CalculateMmsCountCandlesException
+)
+from project.apps.indicators.mms.models import SimpleMovingAverage
 from project.services.candles.clients import get_candles
 
 
