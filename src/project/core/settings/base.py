@@ -64,6 +64,10 @@ CID_CONCATENATE_IDS = True
 CID_HEADER = 'X-Correlation-ID'
 CID_RESPONSE_HEADER = 'X-Correlation-ID'
 
+# Cors (https://github.com/adamchainz/django-cors-headers)
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_CREDENTIALS = True
+
 # Django templates settings (https://docs.djangoproject.com/en/3.2/topics/templates) # noqa
 TEMPLATES = [
     {
@@ -95,6 +99,7 @@ if ADMIN_ENABLED:
     DEFAULT_APPS.append('django.contrib.admin')
 
 THIRD_PARTY_APPS = [
+    'corsheaders',
     'django_extensions',
     'django_dbconn_retry',
     'django_celery_beat',
@@ -112,6 +117,7 @@ INSTALLED_APPS = DEFAULT_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 DEFAULT_MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',

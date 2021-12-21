@@ -18,7 +18,8 @@ handler500 = custom_handler_500
 api = NinjaAPI(
     docs_url=None,
     version='0',
-    renderer=RendererDefault()
+    renderer=RendererDefault(),
+    csrf=False,
 )
 api.add_router('ping/', ping_router)
 
@@ -27,7 +28,8 @@ api_v1 = NinjaAPI(
     version='1.0.0',
     title='Indicators - Mercado Bitcoin',
     description='',
-    renderer=RendererDefault()
+    renderer=RendererDefault(),
+    csrf=False,
 )
 api_v1.add_router('indicators/', indicators_router),
 
