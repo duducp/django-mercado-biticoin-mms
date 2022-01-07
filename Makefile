@@ -1,6 +1,6 @@
 PROJECT_PATH=./src/project
 PROJECT_APPS_PATH=./src/project/apps
-FILE_ENV=.env-development
+FILE_ENV=.env.development
 BRANCH_NAME=$(shell git rev-parse --abbrev-ref HEAD)
 
 export PYTHONPATH=src

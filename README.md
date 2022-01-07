@@ -12,8 +12,8 @@ Principais dependências:
 - [Celery](https://docs.celeryproject.org/en/stable/getting-started/introduction.html)
 
 Compatibilidade:
-- Python 3.10.1
-- Django 3.2.10
+- Python 3.10.3
+- Django 3.2.12
 
 ## Índice
 - [Sobre o projeto](#about)
@@ -141,18 +141,17 @@ make dependencies
 O modo de desenvolvimento por padrão utiliza o Postgres como banco de dados e
 Redis para cache e filas do Celery.
 
-1- Copie o arquivo _.env-sample_ e renomeie para _.env-development_.
+1- Copie o arquivo _.env-sample_ e renomeie para _.env.development_.
 Aproveite e faça os ajustes necessários nas variáveis de ambiente:
 ```shell script
-cp .env-sample .env-development
+cp .env-sample .env.development
 ```
 
-2- Execute o comando para criar as tabelas no banco de dados:
+2- Execute o comando para criar as tabelas no banco de dados.
+Ao executar o comando abaixo será criado os containers docker com as dependências:
 ```shell script
 make migrate
 ```
-
-Ao executar o comando acima será criados os containers docker com as dependências.
 
 3- Para acessar o Django Admin é necessário criar o super usuário e isso pode
 ser feito com o seguinte comando:
@@ -212,7 +211,7 @@ Se a primeira vez que o projeto está sendo executado normalmente queremos fazer
 uma carga inicial no banco de dados.
 
 Os scripts são configurados no [management](https://docs.djangoproject.com/pt-br/3.0/howto/custom-management-commands/)
-do Django. Veja que no app `src/project/indicators/mms` existe o diretório
+do Django. Veja que no app `src/project/apps/indicators/mms` existe o diretório
 `management/commands` com o arquivo _mms_initial_charge.py_. Esse arquivo é o
 script de carga inicial das variações de média móvel simples.
 
@@ -284,7 +283,7 @@ Dentro de cada _app_ que fica no diretório `src/project` existe uma pasta chama
 Cada arquivo python de teste tem seu nome começado com **test_** e cada função
 de teste começa com **test_**.
 
-Existe alguns comandos para você rodar os testes:
+Existe alguns comandos (make) para você rodar os testes:
 
 |Comando                    |Descrição                                                                                                      |
 |---------------------------|---------------------------------------------------------------------------------------------------------------|
